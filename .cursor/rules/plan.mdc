@@ -1,0 +1,196 @@
+---
+alwaysApply: true
+---
+
+
+<!-- 46277f0b-e26f-46b7-827e-c676809faacf d30a2d21-9306-445a-a94a-a04fe3f47abd -->
+# NestJS Authentication & Authorization API
+
+## Project Structure
+
+```
+src/
+├── auth/
+│   ├── decorators/
+│   ├── guards/
+│   ├── strategies/
+│   ├── dto/
+│   └── auth.service.ts
+├── users/
+│   ├── dto/
+│   └── users.service.ts
+├── common/
+│   ├── decorators/
+│   ├── guards/
+│   ├── interceptors/
+│   └── filters/
+├── mail/
+│   └── mail.service.ts
+├── prisma/
+│   └── prisma.service.ts
+└── config/
+```
+
+## Implementation Steps
+
+### 1. Project Initialization
+
+- Initialize NestJS project with necessary dependencies
+- Install: `@nestjs/jwt`, `@nestjs/passport`, `@nestjs/swagger`, `@nestjs/throttler`, `@prisma/client`, `bcrypt`, `class-validator`, `class-transformer`, `nodemailer`
+- Set up Prisma with PostgreSQL schema
+
+### 2. Database Schema (Prisma)
+
+- **User model**: id, email, password (hashed), firstName, lastName, role (ADMIN/USER), isEmailVerified, emailVerificationToken, resetPasswordToken, resetPasswordExpires, isActive (for deactivation), deletedAt (for soft delete), createdAt, updatedAt
+- **RefreshToken model**: id, token, userId, expiresAt, createdAt
+- Configure relations and indexes
+
+### 3. Core Auth Module
+
+- **JWT Strategy**: Access token validation (15min expiry)
+- **Refresh Token Strategy**: Refresh token validation (7 days expiry)
+- **Auth Service**: 
+  - Register with email verification
+  - Login with credentials
+  - Refresh token rotation
+  - Logout (invalidate refresh token)
+  - Email verification
+  - Password reset request & confirmation
+- **Auth Controller**: REST endpoints with Swagger decorators
+- **DTOs**: RegisterDto, LoginDto, RefreshTokenDto, ResetPasswordDto, VerifyEmailDto
+
+### 4. RBAC Implementation
+
+- **Roles decorator**: `@Roles('admin', 'user')`
+- **RolesGuard**: Check user roles from JWT payload
+- **Public decorator**: `@Public()` to bypass auth on specific routes
+- Combine with JwtAuthGuard for protected routes
+
+### 5. User Module
+
+- **Users Service**: CRUD operations, role management
+- **Users Controller**: 
+  - GET /users (admin only)
+  - GET /users/me (authenticated user)
+  - PATCH /users/me (update profile)
+  - PATCH /users/:id/role (admin only)
+- Proper authorization checks per endpoint
+
+### 6. Email Service
+
+- **Mail Module**: Configure nodemailer with SMTP
+- Email templates for:
+  - Welcome + email verification link
+  - Password reset link
+  - Password changed confirmation
+- Use environment variables for SMTP config
+
+### 7. Security Features
+
+- **Rate Limiting**: `@nestjs/throttler` for login/register endpoints
+- **Password Hashing**: bcrypt with salt rounds
+- **Helmet**: Security headers
+- **CORS**: Configurable origins
+- **Validation Pipe**: Global validation with class-validator
+- **Exception Filters**: Standardized error responses
+
+### 8. Swagger Documentation
+
+- Configure Swagger module with JWT bearer auth
+- Add `@ApiTags`, `@ApiOperation`, `@ApiResponse` decorators
+- Document all DTOs with `@ApiProperty`
+- Available at `/api/docs`
+
+### 9. Docker Setup
+
+- **Dockerfile**: Multi-stage build for production
+- **docker-compose.yml**: 
+  - PostgreSQL service
+  - NestJS app service
+  - Environment variables
+  - Volume mounts for development
+- `.dockerignore` file
+
+### 10. Configuration & Environment
+
+- **Environment variables**: 
+  - DATABASE_URL
+  - JWT_ACCESS_SECRET, JWT_REFRESH_SECRET
+  - SMTP credentials
+  - APP_URL, PORT
+- `.env.example` template
+- ConfigModule with validation
+
+## Key Features Delivered
+
+✓ JWT access tokens (short-lived) + refresh tokens (long-lived)
+
+✓ Refresh token rotation for security
+
+✓ Role-based access control (Admin/User)
+
+✓ Email verification on registration
+
+✓ Password reset flow
+
+✓ Rate limiting on sensitive endpoints
+
+✓ Auto-generated Swagger API documentation
+
+✓ Docker containerization
+
+✓ Prisma ORM with PostgreSQL
+
+✓ Clean, modular, scalable architecture
+
+✓ Global exception handling
+
+✓ Request validation
+
+✓ Security best practices
+
+## Recommendations & Considerations
+
+### What You Might Want to Add Later:
+
+1. **2FA/MFA**: Time-based OTP for additional security
+2. **OAuth Integration**: Google, GitHub, Facebook login
+3. **Audit Logging**: Track user actions and auth events
+4. **Session Management**: View and revoke active sessions
+5. **Password Policies**: Complexity requirements, expiration
+6. **Account Lockout**: After failed login attempts
+7. **API Versioning**: `/api/v1/` prefix structure
+8. **Caching**: Redis for refresh tokens and rate limiting
+9. **Testing**: Unit tests and E2E tests
+10. **CI/CD Pipeline**: GitHub Actions or similar
+11. **Monitoring**: Logging service (Winston) + APM
+12. **Database Migrations**: Version control for schema changes
+13. **Soft Deletes**: Keep user data with deleted flag
+14. **File Upload**: Profile pictures with cloud storage
+15. **Permissions System**: Granular permissions beyond roles
+
+### Security Best Practices Included:
+
+- Passwords hashed with bcrypt (never stored plain)
+- JWT secrets in environment variables
+- Refresh token rotation (old token invalidated)
+- Email verification required before full access
+- Rate limiting on auth endpoints
+- CORS configuration
+- Helmet for security headers
+- Input validation on all endpoints
+- SQL injection protection (Prisma)
+- XSS protection via validation
+
+### To-dos
+
+- [ ] Initialize NestJS project and install all required dependencies
+- [ ] Configure Prisma with PostgreSQL schema (User, RefreshToken models)
+- [ ] Implement Auth module with JWT strategies, guards, and core auth service
+- [ ] Create RBAC system with roles decorator, guards, and authorization
+- [ ] Build User module with CRUD operations and role management
+- [ ] Implement email service for verification and password reset
+- [ ] Add rate limiting, validation, exception filters, and security middleware
+- [ ] Configure Swagger with complete API documentation
+- [ ] Create Dockerfile and docker-compose.yml with PostgreSQL
+- [ ] Set up environment configuration and .env.example file
