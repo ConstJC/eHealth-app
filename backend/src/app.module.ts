@@ -7,6 +7,8 @@ import { PrismaService } from './prisma/prisma.service';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { MailModule } from './mail/mail.module';
+import { PatientsModule } from './patients/patients.module';
+import { VisitsModule } from './visits/visits.module';
 import configuration from './config/configuration';
 
 @Module({
@@ -25,6 +27,8 @@ import configuration from './config/configuration';
     AuthModule,
     UsersModule,
     MailModule,
+    PatientsModule,
+    VisitsModule,
   ],
   controllers: [AppController],
   providers: [AppService, PrismaService],

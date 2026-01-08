@@ -1,0 +1,360 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// ENUMS
+// ============================================
+
+enum Role {
+  ADMIN
+  DOCTOR
+  NURSE
+  RECEPTIONIST
+  PHARMACIST  // Future use
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
+enum PatientStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum VisitType {
+  ROUTINE
+  FOLLOWUP
+  EMERGENCY
+  SPECIALIST
+}
+
+enum VisitStatus {
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum PrescriptionStatus {
+  ACTIVE
+  DISCONTINUED
+  COMPLETED
+}
+
+enum InvoiceStatus {
+  UNPAID
+  PARTIAL
+  PAID
+}
+
+enum AuditAction {
+  PATIENT_CREATED
+  PATIENT_UPDATED
+  PATIENT_ACCESSED
+  PATIENT_DELETED
+  VISIT_CREATED
+  VISIT_UPDATED
+  VISIT_COMPLETED
+  PRESCRIPTION_CREATED
+  PRESCRIPTION_DISCONTINUED
+  INVOICE_CREATED
+  PAYMENT_RECORDED
+  USER_CREATED
+  USER_UPDATED
+  USER_DELETED
+  ROLE_CHANGED
+  LOGIN_SUCCESS
+  LOGIN_FAILED
+  PASSWORD_RESET
+}
+
+// ============================================
+// MODELS
+// ============================================
+
+model User {
+  id                      String    @id @default(cuid())
+  email                   String    @unique
+  password                String
+  firstName               String
+  lastName                String
+  role                    Role      @default(DOCTOR)
+  isEmailVerified         Boolean   @default(false)
+  emailVerificationToken  String?   @unique
+  resetPasswordToken      String?   @unique
+  resetPasswordExpires    DateTime?
+  isActive                Boolean   @default(true)
+  deletedAt               DateTime?
+  createdAt               DateTime  @default(now())
+  updatedAt               DateTime  @updatedAt
+
+  // Relations
+  refreshTokens           RefreshToken[]
+  visits                  Visit[]
+  auditLogs               AuditLog[]
+
+  @@map("users")
+  @@index([email])
+  @@index([emailVerificationToken])
+  @@index([resetPasswordToken])
+  @@index([deletedAt])
+}
+
+model RefreshToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  // Relations
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("refresh_tokens")
+  @@index([token])
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model Patient {
+  id              String         @id @default(cuid())
+  patientId       String         @unique  // e.g., P2024-00001
+  firstName       String
+  lastName        String
+  dateOfBirth     DateTime
+  gender          Gender
+  phone           String
+  email           String?
+  address         String?
+  
+  // Emergency Contact
+  emergencyContactName     String?
+  emergencyContactPhone    String?
+  emergencyContactRelation String?
+  
+  // Medical Information
+  bloodType          String?
+  allergies          String[]       // Array of allergy strings
+  chronicConditions  String[]       // Array of conditions
+  currentMedications String[]       // Current meds before clinic visit
+  familyHistory      String?        // Free text
+  
+  // Insurance (optional)
+  insuranceProvider     String?
+  insuranceNumber       String?
+  insurancePolicyExpiry DateTime?
+  
+  // Photo
+  photoUrl        String?
+  
+  // Status
+  status          PatientStatus  @default(ACTIVE)
+  notes           String?        // General notes about patient
+  
+  // Relations
+  visits          Visit[]
+  prescriptions   Prescription[]
+  invoices        Invoice[]
+  
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  deletedAt       DateTime?      // Soft delete
+
+  @@map("patients")
+  @@index([patientId])
+  @@index([phone])
+  @@index([email])
+  @@index([firstName, lastName])
+  @@index([status])
+  @@index([deletedAt])
+}
+
+model Visit {
+  id              String       @id @default(cuid())
+  patientId       String
+  patient         Patient      @relation(fields: [patientId], references: [id])
+  doctorId        String
+  doctor          User         @relation(fields: [doctorId], references: [id])
+  
+  // Visit Info
+  visitDate       DateTime     @default(now())
+  visitType       VisitType
+  status          VisitStatus  @default(IN_PROGRESS)
+  
+  // Vital Signs (recorded by nurse)
+  bloodPressureSystolic   Int?
+  bloodPressureDiastolic  Int?
+  heartRate               Int?      // BPM
+  respiratoryRate         Int?      // breaths per minute
+  temperature             Float?    // Celsius
+  oxygenSaturation        Int?      // SpO2 %
+  weight                  Float?    // kg
+  height                  Float?    // cm
+  bmi                     Float?    // Auto-calculated
+  painScale               Int?      // 0-10
+  vitalSignsRecordedBy    String?   // User ID of nurse/staff
+  vitalSignsRecordedAt    DateTime?
+  
+  // SOAP Notes (by doctor)
+  chiefComplaint  String?       // Main reason for visit
+  subjective      String?       // History of present illness, ROS
+  objective       String?       // Physical examination findings
+  assessment      String?       // Diagnosis and clinical impression
+  plan            String?       // Treatment plan and follow-up
+  
+  // Diagnosis
+  primaryDiagnosis   String?
+  secondaryDiagnoses String[]    // Additional diagnoses
+  icdCodes           String[]    // ICD-10 codes (future)
+  
+  // Additional
+  notes           String?       // General notes
+  followUpDate    DateTime?
+  followUpReason  String?
+  
+  // Document locking (once signed, cannot edit)
+  isLocked        Boolean      @default(false)
+  lockedAt        DateTime?
+  lockedBy        String?      // User ID who locked
+  
+  // Attachments
+  attachments     String[]     // URLs to uploaded files
+  
+  // Relations
+  prescriptions   Prescription[]
+  invoice         Invoice?
+  
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  @@map("visits")
+  @@index([patientId])
+  @@index([doctorId])
+  @@index([visitDate])
+  @@index([status])
+  @@index([visitType])
+}
+
+model Prescription {
+  id              String              @id @default(cuid())
+  patientId       String
+  patient         Patient             @relation(fields: [patientId], references: [id])
+  visitId         String?
+  visit           Visit?              @relation(fields: [visitId], references: [id])
+  doctorId        String
+  
+  // Medication Info
+  medicationName  String
+  genericName     String?
+  brandName       String?
+  dosage          String              // e.g., "500mg"
+  frequency       String              // e.g., "twice daily"
+  route           String              // ORAL, TOPICAL, INJECTION, etc.
+  duration        String              // e.g., "7 days", "2 weeks"
+  quantity        String              // e.g., "14 tablets"
+  refills         Int                 @default(0)
+  instructions    String?             // Special instructions
+  
+  // Status
+  status          PrescriptionStatus  @default(ACTIVE)
+  discontinuedAt  DateTime?
+  discontinuedBy  String?             // User ID
+  discontinueReason String?
+  
+  // Safety tracking
+  notes           String?             // Additional notes
+  
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+
+  @@map("prescriptions")
+  @@index([patientId])
+  @@index([visitId])
+  @@index([doctorId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model Invoice {
+  id              String          @id @default(cuid())
+  invoiceNumber   String          @unique  // Auto-generated: INV-2024-00001
+  patientId       String
+  patient         Patient         @relation(fields: [patientId], references: [id])
+  visitId         String?         @unique
+  visit           Visit?          @relation(fields: [visitId], references: [id])
+  
+  // Invoice Items (JSON array)
+  items           Json            // [{ description, quantity, unitPrice, total }]
+  
+  // Amounts (in local currency)
+  subtotal        Float
+  discount        Float           @default(0)
+  discountReason  String?
+  tax             Float           @default(0)
+  taxRate         Float           @default(0)
+  total           Float
+  
+  // Payment Status
+  amountPaid      Float           @default(0)
+  balance         Float
+  status          InvoiceStatus   @default(UNPAID)
+  
+  // Payment History (JSON array)
+  payments        Json            @default("[]")  
+  // [{ date, amount, method, receiptNo, recordedBy }]
+  
+  // Billing
+  billedBy        String          // User ID
+  billedAt        DateTime        @default(now())
+  
+  // Notes
+  notes           String?
+  
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  @@map("invoices")
+  @@index([invoiceNumber])
+  @@index([patientId])
+  @@index([visitId])
+  @@index([status])
+  @@index([billedAt])
+}
+
+model AuditLog {
+  id          String      @id @default(cuid())
+  userId      String?     // Nullable for system actions
+  user        User?       @relation(fields: [userId], references: [id])
+  
+  action      AuditAction
+  entityType  String      // Patient, Visit, User, etc.
+  entityId    String?     // ID of the affected entity
+  
+  // Additional context
+  details     Json?       // Additional details about the action
+  changes     Json?       // Before/after values for updates
+  
+  // Request metadata
+  ipAddress   String?
+  userAgent   String?
+  
+  // Timestamp
+  createdAt   DateTime    @default(now())
+
+  @@map("audit_logs")
+  @@index([userId])
+  @@index([action])
+  @@index([entityType, entityId])
+  @@index([createdAt])
+}
