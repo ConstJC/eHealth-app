@@ -2,7 +2,33 @@
 
 ## Overview
 
-eHealth EMR uses a **monorepo** structure to manage both frontend (Next.js) and backend (NestJS) applications in a single repository. This approach enables shared code, synchronized development, and easier dependency management.
+### Architecture Philosophy
+
+eHealth EMR follows a **hybrid architecture approach**:
+
+1. **Development:** Monorepo structure for shared code and easier development
+2. **Production:** Separate, independent deployments for security and scalability
+
+### Development Structure (Monorepo)
+
+The project uses a **monorepo** structure for **development** to manage both frontend (Next.js) and backend (NestJS) applications in a single repository. This approach enables:
+- ✅ Shared TypeScript types between frontend and backend
+- ✅ Shared utility functions
+- ✅ Synchronized development and versioning
+- ✅ Easier dependency management
+- ✅ Atomic changes across frontend and backend
+
+### Production Deployment (Separate Services)
+
+**Critical:** While the codebase is organized as a monorepo for development efficiency, **frontend and backend are deployed as separate, independent services in production**. This separation provides:
+
+- ✅ **Security:** Isolated attack surfaces, network segmentation
+- ✅ **Scalability:** Independent scaling of frontend and backend
+- ✅ **Performance:** CDN for static assets, optimized resource allocation
+- ✅ **Maintainability:** Independent deployments and versioning
+- ✅ **Compliance:** Better HIPAA/GDPR compliance with data isolation
+
+**See [Deployment Architecture](./DEPLOYMENT_ARCHITECTURE.md) for detailed production deployment strategies.**
 
 ## Full Repository Structure
 
@@ -951,29 +977,105 @@ npm run test:e2e --prefix apps/backend
 
 ## Production Deployment
 
+### Deployment Architecture
+
+**Critical:** Frontend and backend are deployed as **separate, independent services** in production. This separation provides:
+
+- ✅ **Security**: Isolated attack surfaces, network segmentation
+- ✅ **Scalability**: Independent scaling of frontend and backend
+- ✅ **Performance**: CDN for static assets, optimized resource allocation
+- ✅ **Maintainability**: Independent deployments and versioning
+- ✅ **Compliance**: Better HIPAA/GDPR compliance with data isolation
+
+### Deployment Options
+
+#### Option 1: Separate Cloud Platforms (Recommended)
+- **Frontend**: Deploy to Vercel, Netlify, or AWS S3 + CloudFront
+- **Backend**: Deploy to Railway, Render, AWS ECS, or VPS
+- **Database**: Managed PostgreSQL (Railway, Render, AWS RDS)
+
+#### Option 2: VPS with Reverse Proxy
+- **Single VPS**: Nginx reverse proxy routes traffic
+- **Frontend**: Next.js app on port 3000
+- **Backend**: NestJS API on port 3001
+- **Database**: PostgreSQL container
+
+See [Deployment Architecture Documentation](./DEPLOYMENT_ARCHITECTURE.md) for detailed deployment strategies.
+
 ### Building for Production
 
+#### Frontend Build (Deploy Separately)
 ```bash
-# Build frontend
-npm run build --prefix apps/frontend
+cd apps/frontend
+npm run build
+# Deploy .next folder to Vercel, Netlify, or VPS
+```
 
-# Build backend
-npm run build --prefix apps/backend
+#### Backend Build (Deploy Separately)
+```bash
+cd apps/backend
+npm run build
+# Deploy dist folder to Railway, Render, or VPS
+```
 
-# Build Docker images
-docker-compose -f docker-compose.prod.yml build
+#### Docker Builds (For Containerized Deployment)
+```bash
+# Build frontend image
+docker build -f docker/frontend.Dockerfile -t ehealth-frontend:latest ./apps/frontend
 
-# Start production containers
-docker-compose -f docker-compose.prod.yml up -d
+# Build backend image
+docker build -f docker/backend.Dockerfile -t ehealth-backend:latest ./apps/backend
+
+# Deploy containers separately or use docker-compose.prod.yml for VPS deployment
+```
+
+### Environment Configuration for Separate Deployment
+
+#### Frontend Environment Variables
+```bash
+# apps/frontend/.env.production
+NEXT_PUBLIC_API_URL=https://api.yourdomain.com
+```
+
+#### Backend Environment Variables
+```bash
+# apps/backend/.env.production
+FRONTEND_URL=https://yourdomain.com
+DATABASE_URL=postgresql://user:pass@host:5432/db
+JWT_ACCESS_SECRET=...
+JWT_REFRESH_SECRET=...
+```
+
+### CORS Configuration
+
+Since frontend and backend are on different domains, CORS must be configured:
+
+```typescript
+// apps/backend/src/main.ts
+app.enableCors({
+  origin: process.env.FRONTEND_URL || 'https://yourdomain.com',
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+});
 ```
 
 ## Key Design Decisions
 
-### Why Monorepo?
+### Why Monorepo for Development?
 - **Shared Code**: Types, utilities shared between frontend and backend
 - **Atomic Changes**: Update both API and UI in single PR
 - **Simplified Versioning**: Single version for entire application
 - **Easier Development**: Run entire stack locally with one command
+- **Type Safety**: Shared TypeScript types ensure consistency
+
+### Why Separate Deployment in Production?
+- **Security**: Isolated services reduce attack surface
+- **Scalability**: Scale frontend and backend independently
+- **Performance**: CDN for static assets, optimized resource allocation
+- **Maintainability**: Deploy updates without affecting other service
+- **Compliance**: Better data isolation for HIPAA/GDPR requirements
+- **Cost Efficiency**: Optimize resources per service
 
 ### Why Next.js App Router?
 - **Server Components**: Improved performance, less client JavaScript

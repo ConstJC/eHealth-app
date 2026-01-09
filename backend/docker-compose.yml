@@ -6,7 +6,7 @@ services:
       context: .
       dockerfile: Dockerfile
     ports:
-      - '${APP_URL}:8000'
+      - '${FRONTEND_URL}:8000'
     environment:
       - STAGE=${STAGE}
       - DB_URL=${DB_URL}

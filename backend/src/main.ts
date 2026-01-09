@@ -21,9 +21,10 @@ async function bootstrap() {
     exclude: ['/'],
   });
 
-  // Enable API versioning
+  // Enable API versioning with default version
   app.enableVersioning({
     type: VersioningType.URI,
+    defaultVersion: '1',
   });
 
   // Security middleware
@@ -91,12 +92,12 @@ async function bootstrap() {
     },
   });
 
-  const port = configService.get<number>('port') || 3000;
+  const port = configService.get<number>('port') || 4081;
   await app.listen(port);
   
   console.log(`🚀 Application is running on: http://localhost:${port}`);
   console.log(`📚 Swagger documentation: http://localhost:${port}/docs`);
-  console.log(`🔗 API Base URL: http://localhost:${port}/api`);
+  console.log(`🔗 API Base URL: http://localhost:${port}/api/v1`);
 }
 
 bootstrap();

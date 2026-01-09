@@ -144,8 +144,8 @@ src/
 ## 📚 API Documentation
 
 Once the application is running, visit:
-- **Swagger UI**: http://localhost:3000/api/docs
-- **Health Check**: http://localhost:3000/health
+- **Swagger UI**: http://localhost:4081/api/docs
+- **Health Check**: http://localhost:4081/health
 
 ## 🔐 API Endpoints
 
@@ -246,8 +246,8 @@ JWT_REFRESH_EXPIRES_IN="7d"
 
 # Application
 NODE_ENV="development"
-PORT=3000
-APP_URL="http://localhost:3000"
+PORT=4081
+FRONTEND_URL="http://localhost:8000"
 
 # Email Configuration
 SMTP_HOST="smtp.gmail.com"

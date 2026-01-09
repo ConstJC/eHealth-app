@@ -117,7 +117,7 @@ src/
   - DATABASE_URL
   - JWT_ACCESS_SECRET, JWT_REFRESH_SECRET
   - SMTP credentials
-  - APP_URL, PORT
+  - FRONTEND_URL, PORT
 - `.env.example` template
 - ConfigModule with validation
 

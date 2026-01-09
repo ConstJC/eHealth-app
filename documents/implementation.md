@@ -6,24 +6,31 @@ eHealth EMR follows modern software development practices with emphasis on code 
 
 ## Code Organization and Architecture
 
-### Full-Stack Monorepo Structure
+### Full-Stack Monorepo Structure (Development)
 
-The project uses a monorepo architecture to maintain both frontend (Next.js) and backend (NestJS) in a single repository with shared types and utilities.
+**Important:** The project uses a monorepo architecture for **development** to maintain both frontend (Next.js) and backend (NestJS) in a single repository with shared types and utilities. However, **frontend and backend are deployed separately in production** for security, scalability, and performance.
 
+**Development Structure:**
 ```
 healthcare-app/
 ├── apps/
-│   ├── frontend/          # Next.js application
-│   └── backend/           # NestJS application
+│   ├── frontend/          # Next.js application (deploys separately)
+│   └── backend/           # NestJS application (deploys separately)
 ├── packages/
-│   ├── shared-types/      # Shared TypeScript types
-│   └── shared-utils/      # Shared utilities
+│   ├── shared-types/      # Shared TypeScript types (dev only)
+│   └── shared-utils/      # Shared utilities (dev only)
 ├── docker/
 │   ├── frontend.Dockerfile
 │   └── backend.Dockerfile
-├── docker-compose.yml
+├── docker-compose.yml     # Development only
 └── package.json
 ```
+
+**Production Deployment:**
+- Frontend and backend are deployed as **separate, independent services**
+- See [Deployment Architecture](./DEPLOYMENT_ARCHITECTURE.md) for detailed deployment strategies
+- CORS must be configured for cross-origin requests
+- Environment variables must be set for production URLs
 
 ### Frontend Implementation (Next.js)
 

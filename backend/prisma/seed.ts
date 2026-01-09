@@ -13,10 +13,10 @@ async function main() {
   // Create admin user
   const adminPassword = await bcrypt.hash('AdminPassword123!', 12);
   const admin = await prisma.user.upsert({
-    where: { email: 'admin@healthclinic.com' },
+    where: { email: 'admin@example.com' },
     update: {},
     create: {
-      email: 'admin@healthclinic.com',
+      email: 'admin@example.com',
       password: adminPassword,
       firstName: 'Admin',
       lastName: 'User',
@@ -30,10 +30,10 @@ async function main() {
   // Create doctor
   const doctorPassword = await bcrypt.hash('DoctorPassword123!', 12);
   const doctor = await prisma.user.upsert({
-    where: { email: 'dr.smith@healthclinic.com' },
+    where: { email: 'dr.smith@example.com' },
     update: {},
     create: {
-      email: 'dr.smith@healthclinic.com',
+      email: 'dr.smith@example.com',
       password: doctorPassword,
       firstName: 'John',
       lastName: 'Smith',
@@ -47,10 +47,10 @@ async function main() {
   // Create another doctor
   const doctor2Password = await bcrypt.hash('DoctorPassword123!', 12);
   const doctor2 = await prisma.user.upsert({
-    where: { email: 'dr.johnson@healthclinic.com' },
+    where: { email: 'dr.johnson@example.com' },
     update: {},
     create: {
-      email: 'dr.johnson@healthclinic.com',
+      email: 'dr.johnson@example.com',
       password: doctor2Password,
       firstName: 'Sarah',
       lastName: 'Johnson',
@@ -64,10 +64,10 @@ async function main() {
   // Create nurse
   const nursePassword = await bcrypt.hash('NursePassword123!', 12);
   const nurse = await prisma.user.upsert({
-    where: { email: 'nurse.williams@healthclinic.com' },
+    where: { email: 'nurse.williams@example.com' },
     update: {},
     create: {
-      email: 'nurse.williams@healthclinic.com',
+      email: 'nurse.williams@example.com',
       password: nursePassword,
       firstName: 'Mary',
       lastName: 'Williams',
@@ -81,10 +81,10 @@ async function main() {
   // Create receptionist
   const receptionistPassword = await bcrypt.hash('ReceptionistPassword123!', 12);
   const receptionist = await prisma.user.upsert({
-    where: { email: 'receptionist@healthclinic.com' },
+    where: { email: 'receptionist@example.com' },
     update: {},
     create: {
-      email: 'receptionist@healthclinic.com',
+      email: 'receptionist@example.com',
       password: receptionistPassword,
       firstName: 'Emma',
       lastName: 'Davis',
@@ -468,11 +468,11 @@ async function main() {
   console.log('\n🎉 Database seeding completed successfully!');
   console.log('\n📋 Test Accounts:');
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-  console.log('Admin:        admin@healthclinic.com / AdminPassword123!');
-  console.log('Doctor 1:     dr.smith@healthclinic.com / DoctorPassword123!');
-  console.log('Doctor 2:     dr.johnson@healthclinic.com / DoctorPassword123!');
-  console.log('Nurse:        nurse.williams@healthclinic.com / NursePassword123!');
-  console.log('Receptionist: receptionist@healthclinic.com / ReceptionistPassword123!');
+  console.log('Admin:        admin@example.com / AdminPassword123!');
+  console.log('Doctor 1:     dr.smith@example.com / DoctorPassword123!');
+  console.log('Doctor 2:     dr.johnson@example.com / DoctorPassword123!');
+  console.log('Nurse:        nurse.williams@example.com / NursePassword123!');
+  console.log('Receptionist: receptionist@example.com / ReceptionistPassword123!');
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
   console.log('\n📊 Sample Data Created:');
   console.log(`- 5 Users (1 Admin, 2 Doctors, 1 Nurse, 1 Receptionist)`);

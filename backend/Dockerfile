@@ -57,8 +57,8 @@ COPY --from=builder --chown=jcode:nodejs /builder/package.json ./package.json
 # Switch to non-root user for security
 USER jcode
 
-# Inform Docker that the container is listening on port 3000 at runtime
-EXPOSE 3000
+# Inform Docker that the container is listening on port 4081 at runtime
+EXPOSE 4081
 
 # Define the command to run the app
 CMD ["node", "dist/main.js"]

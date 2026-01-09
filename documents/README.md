@@ -61,16 +61,19 @@ Contains:
 **Purpose**: System architecture and code organization
 
 Contains:
-- Complete monorepo structure
+- Complete monorepo structure (for development)
 - Frontend directory layout (Next.js)
 - Backend directory layout (NestJS)
 - Shared packages structure
 - Docker configuration
 - Database structure
 - Data flow architecture
+- **Separate deployment architecture** (frontend and backend deploy independently in production)
 - Key design decisions explained
 
 **Use this** when setting up the project or understanding how different parts connect.
+
+**Important:** While the codebase uses a monorepo for development, frontend and backend are deployed as separate services in production. See [Deployment Architecture](./DEPLOYMENT_ARCHITECTURE.md) for production deployment strategies.
 
 ---
 
