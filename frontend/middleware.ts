@@ -1,30 +1,49 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { ROUTES } from '@/lib/constants';
+import { DEFAULT_LANGUAGE } from '@/lib/constants';
 
-// Public routes that don't require authentication
-const publicRoutes = [
-  ROUTES.LOGIN,
-  ROUTES.REGISTER,
-  ROUTES.FORGOT_PASSWORD,
-  ROUTES.RESET_PASSWORD,
-  ROUTES.VERIFY_EMAIL,
-  '/api/auth',
+// Public routes that don't require authentication (without language prefix)
+const publicRoutePaths = [
+  '/sign-in',
+  '/register',
+  '/forgot-password',
+  '/reset-password',
+  '/verify-email',
 ];
+
+// Check if route is an auth route (should use auth layout)
+function isAuthRoute(routePath: string): boolean {
+  return publicRoutePaths.some(path => routePath.startsWith(path));
+}
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  const token = request.cookies.get('accessToken') || 
-                request.headers.get('authorization');
 
-  // Check if route is public
-  const isPublicRoute = publicRoutes.some(route => 
-    pathname.startsWith(route)
+  // Redirect root to default language
+  if (pathname === '/') {
+    return NextResponse.redirect(new URL(`/${DEFAULT_LANGUAGE}/dashboard`, request.url));
+  }
+
+  // Extract language from pathname
+  const pathSegments = pathname.split('/').filter(Boolean);
+  const language = pathSegments[0];
+  const routePath = '/' + pathSegments.slice(1).join('/');
+
+  // Check if route is public (checking the route path without language)
+  const isPublicRoute = publicRoutePaths.some(route => 
+    routePath.startsWith(route)
   );
 
   // Allow public routes and API routes
   if (isPublicRoute || pathname.startsWith('/api/')) {
     return NextResponse.next();
+  }
+
+  // Validate language code (optional - you can add more validation)
+  const validLanguages = ['en', 'es', 'fr']; // Add more as needed
+  if (language && !validLanguages.includes(language)) {
+    // Redirect invalid language to default
+    return NextResponse.redirect(new URL(`/${DEFAULT_LANGUAGE}${routePath}`, request.url));
   }
 
   // Check if user is trying to access dashboard without auth

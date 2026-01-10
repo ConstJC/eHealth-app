@@ -1,36 +1,192 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# eHealth EMR Frontend
 
-## Getting Started
+Web-based Electronic Medical Records (EMR) system frontend built with Next.js 16, React 19, and TypeScript.
 
-First, run the development server:
+## 🚀 Getting Started
+
+### Prerequisites
+
+- Node.js 20+ 
+- npm or yarn
+- Backend API running (default: http://localhost:4081)
+
+### Installation
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+# Install dependencies
+npm install
+
+# Copy environment variables
+cp env.example .env.local
+
+# Edit .env.local with your configuration
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Environment Variables
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Create a `.env.local` file with the following variables:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```env
+# Backend API URL
+NEXT_PUBLIC_API_URL=http://localhost:4081/api/v1
 
-## Learn More
+# Application URL (for production)
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+```
 
-To learn more about Next.js, take a look at the following resources:
+### Development
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+# Start development server
+npm run dev
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+# Build for production
+npm run build
 
-## Deploy on Vercel
+# Start production server
+npm start
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+# Run linter
+npm run lint
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+The application will be available at `http://localhost:3000`
+
+## 📁 Project Structure
+
+```
+frontend/
+├── app/                    # Next.js App Router
+│   ├── [language]/         # Language-based routing
+│   │   └── (core)/        # Core application routes
+│   ├── api/               # API route handlers (BFF)
+│   ├── error.tsx          # Error boundary
+│   ├── not-found.tsx      # 404 page
+│   └── layout.tsx         # Root layout
+├── components/            # React components
+│   ├── auth/             # Authentication components
+│   ├── common/           # Reusable components
+│   ├── features/         # Feature-specific components
+│   ├── layouts/          # Layout components
+│   └── ui/               # shadcn/ui components
+├── hooks/                # Custom React hooks
+├── lib/                  # Utilities and configurations
+│   ├── api-client.ts     # Axios instance
+│   ├── auth.ts           # Auth utilities
+│   ├── constants.ts      # App constants
+│   ├── validators.ts     # Zod schemas
+│   └── utils/           # Utility functions
+├── store/               # Zustand stores
+├── types/               # TypeScript types
+└── public/              # Static assets
+```
+
+## 🏗️ Architecture
+
+### Routing
+
+- **Language-based routing**: All routes are prefixed with `[language]` (e.g., `/en/dashboard`)
+- **Route groups**: Use `(core)` for protected routes with dashboard layout
+- **API routes**: Next.js API routes act as BFF (Backend for Frontend)
+
+### State Management
+
+- **Zustand**: Global state (auth, UI state)
+- **React Context**: Feature-specific state (patients, visits, etc.)
+- **React Hook Form**: Form state management
+
+### Authentication
+
+- JWT-based authentication with refresh tokens
+- Access tokens stored in memory
+- Refresh tokens in httpOnly cookies
+- Automatic token refresh on 401 errors
+
+### Error Handling
+
+- Global error boundary (`app/error.tsx`)
+- Component-level error boundaries
+- Standardized error handling utilities
+- User-friendly error messages
+
+## 🎨 UI Components
+
+Built with [shadcn/ui](https://ui.shadcn.com/) components:
+
+- Button, Input, Card, Dialog
+- Form components with validation
+- Table, Tabs, Dropdown
+- Loading states and skeletons
+
+## 📝 Code Style
+
+- **TypeScript**: Strict mode enabled
+- **ESLint**: Next.js recommended rules
+- **Prettier**: Code formatting (configured)
+- **Tailwind CSS**: Utility-first styling
+
+## 🔒 Security
+
+- HTTPS/TLS in production
+- Security headers configured
+- XSS protection
+- CSRF protection
+- Input validation and sanitization
+
+## 🧪 Testing
+
+```bash
+# Run tests (when implemented)
+npm test
+
+# Run E2E tests (when implemented)
+npm run test:e2e
+```
+
+## 📦 Build & Deployment
+
+### Production Build
+
+```bash
+npm run build
+```
+
+### Docker
+
+```bash
+# Build Docker image
+docker build -t ehealth-frontend .
+
+# Run container
+docker run -p 3000:3000 ehealth-frontend
+```
+
+## 🐛 Troubleshooting
+
+### Common Issues
+
+1. **API connection errors**: Check `NEXT_PUBLIC_API_URL` in `.env.local`
+2. **Authentication issues**: Verify backend is running and tokens are valid
+3. **Build errors**: Clear `.next` folder and rebuild
+
+### Debug Mode
+
+Set `NODE_ENV=development` for detailed error messages and logging.
+
+## 📚 Documentation
+
+- [Next.js Documentation](https://nextjs.org/docs)
+- [React Documentation](https://react.dev)
+- [TypeScript Documentation](https://www.typescriptlang.org/docs)
+- [Tailwind CSS Documentation](https://tailwindcss.com/docs)
+
+## 🤝 Contributing
+
+1. Follow the existing code style
+2. Write TypeScript types for all new code
+3. Add error handling for API calls
+4. Update documentation for new features
+
+## 📄 License
+
+Copyright © 2025 eHealth EMR. All rights reserved.

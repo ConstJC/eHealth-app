@@ -21,9 +21,9 @@ export async function POST(request: NextRequest) {
     );
     
     return NextResponse.json(response.data, { status: 201 });
-  } catch (error: any) {
-    const status = error.response?.status || 500;
-    const message = error.response?.data?.message || 'Registration failed';
+  } catch (error: unknown) {
+    const status = (error as { response?: { status?: number } }).response?.status || 500;
+    const message = (error as { response?: { data?: { message?: string } } }).response?.data?.message || 'Registration failed';
     
     return NextResponse.json(
       { message },

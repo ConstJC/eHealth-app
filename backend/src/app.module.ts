@@ -9,6 +9,12 @@ import { UsersModule } from './users/users.module';
 import { MailModule } from './mail/mail.module';
 import { PatientsModule } from './patients/patients.module';
 import { VisitsModule } from './visits/visits.module';
+import { PrescriptionsModule } from './prescriptions/prescriptions.module';
+import { InvoicesModule } from './invoices/invoices.module';
+import { AuditModule } from './audit/audit.module';
+import { ReportsModule } from './reports/reports.module';
+import { FilesModule } from './files/files.module';
+import { MenuItemsModule } from './menu-items/menu-items.module';
 import configuration from './config/configuration';
 
 @Module({
@@ -29,6 +35,12 @@ import configuration from './config/configuration';
     MailModule,
     PatientsModule,
     VisitsModule,
+    PrescriptionsModule,
+    InvoicesModule,
+    AuditModule,
+    ReportsModule,
+    FilesModule,
+    MenuItemsModule,
   ],
   controllers: [AppController],
   providers: [AppService, PrismaService],

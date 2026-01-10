@@ -6,13 +6,14 @@ const BACKEND_API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:408
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const authHeader = request.headers.get('authorization');
 
     const response = await axios.get<Patient>(
-      `${BACKEND_API_URL}/patients/${params.id}`,
+      `${BACKEND_API_URL}/patients/${id}`,
       {
         headers: {
           'Content-Type': 'application/json',
@@ -22,9 +23,9 @@ export async function GET(
     );
 
     return NextResponse.json(response.data, { status: 200 });
-  } catch (error: any) {
-    const status = error.response?.status || 500;
-    const message = error.response?.data?.message || 'Failed to fetch patient';
+  } catch (error: unknown) {
+    const status = (error as { response?: { status?: number } }).response?.status || 500;
+    const message = (error as { response?: { data?: { message?: string } } }).response?.data?.message || 'Failed to fetch patient';
 
     return NextResponse.json({ message }, { status });
   }
@@ -32,14 +33,15 @@ export async function GET(
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const body: UpdatePatientInput = await request.json();
     const authHeader = request.headers.get('authorization');
 
     const response = await axios.patch<Patient>(
-      `${BACKEND_API_URL}/patients/${params.id}`,
+      `${BACKEND_API_URL}/patients/${id}`,
       body,
       {
         headers: {
@@ -50,9 +52,9 @@ export async function PATCH(
     );
 
     return NextResponse.json(response.data, { status: 200 });
-  } catch (error: any) {
-    const status = error.response?.status || 500;
-    const message = error.response?.data?.message || 'Failed to update patient';
+  } catch (error: unknown) {
+    const status = (error as { response?: { status?: number } }).response?.status || 500;
+    const message = (error as { response?: { data?: { message?: string } } }).response?.data?.message || 'Failed to update patient';
 
     return NextResponse.json({ message }, { status });
   }
@@ -60,13 +62,14 @@ export async function PATCH(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const authHeader = request.headers.get('authorization');
 
     await axios.delete(
-      `${BACKEND_API_URL}/patients/${params.id}`,
+      `${BACKEND_API_URL}/patients/${id}`,
       {
         headers: {
           ...(authHeader && { Authorization: authHeader }),
@@ -75,9 +78,9 @@ export async function DELETE(
     );
 
     return NextResponse.json({ message: 'Patient deleted successfully' }, { status: 200 });
-  } catch (error: any) {
-    const status = error.response?.status || 500;
-    const message = error.response?.data?.message || 'Failed to delete patient';
+  } catch (error: unknown) {
+    const status = (error as { response?: { status?: number } }).response?.status || 500;
+    const message = (error as { response?: { data?: { message?: string } } }).response?.data?.message || 'Failed to delete patient';
 
     return NextResponse.json({ message }, { status });
   }

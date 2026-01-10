@@ -21,13 +21,22 @@ export interface Patient {
   address?: string;
   photoUrl?: string;
   status: PatientStatus;
+  // Emergency Contact
+  emergencyContactName?: string;
+  emergencyContactPhone?: string;
+  emergencyContactRelation?: string;
+  // Medical Information
+  bloodType?: string;
   allergies: string[];
   chronicConditions: string[];
-  emergencyContact?: {
-    name: string;
-    relationship: string;
-    phone: string;
-  };
+  currentMedications?: string[];
+  familyHistory?: string;
+  // Insurance
+  insuranceProvider?: string;
+  insuranceNumber?: string;
+  insurancePolicyExpiry?: Date | string;
+  // Additional
+  notes?: string;
   createdAt: Date | string;
   updatedAt: Date | string;
 }
@@ -40,13 +49,23 @@ export interface CreatePatientInput {
   phone: string;
   email?: string;
   address?: string;
+  photoUrl?: string;
+  // Emergency Contact
+  emergencyContactName?: string;
+  emergencyContactPhone?: string;
+  emergencyContactRelation?: string;
+  // Medical Information
+  bloodType?: string;
   allergies?: string[];
   chronicConditions?: string[];
-  emergencyContact?: {
-    name: string;
-    relationship: string;
-    phone: string;
-  };
+  currentMedications?: string[];
+  familyHistory?: string;
+  // Insurance
+  insuranceProvider?: string;
+  insuranceNumber?: string;
+  insurancePolicyExpiry?: Date | string;
+  // Additional
+  notes?: string;
 }
 
 export interface UpdatePatientInput extends Partial<CreatePatientInput> {
@@ -55,7 +74,12 @@ export interface UpdatePatientInput extends Partial<CreatePatientInput> {
 
 export interface PatientSearchParams {
   search?: string;
+  name?: string;
+  patientId?: string;
+  dateOfBirth?: string;
   status?: PatientStatus;
+  phone?: string;
+  email?: string;
   page?: number;
   limit?: number;
 }
@@ -69,4 +93,3 @@ export interface PaginatedResponse<T> {
     totalPages: number;
   };
 }
-

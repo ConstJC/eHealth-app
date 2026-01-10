@@ -14,7 +14,10 @@ import * as crypto from 'crypto';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
-import { RequestPasswordResetDto, ResetPasswordDto } from './dto/reset-password.dto';
+import {
+  RequestPasswordResetDto,
+  ResetPasswordDto,
+} from './dto/reset-password.dto';
 import { VerifyEmailDto } from './dto/verify-email.dto';
 import {
   AuthUser,
@@ -55,10 +58,15 @@ export class AuthService {
     }
 
     // Hash password
-    const hashedPassword = await bcrypt.hash(password, AUTH_CONSTANTS.PASSWORD.SALT_ROUNDS);
+    const hashedPassword = await bcrypt.hash(
+      password,
+      AUTH_CONSTANTS.PASSWORD.SALT_ROUNDS,
+    );
 
     // Generate email verification token
-    const emailVerificationToken = crypto.randomBytes(AUTH_CONSTANTS.TOKEN.EMAIL_VERIFICATION_LENGTH).toString('hex');
+    const emailVerificationToken = crypto
+      .randomBytes(AUTH_CONSTANTS.TOKEN.EMAIL_VERIFICATION_LENGTH)
+      .toString('hex');
 
     // Create user
     const user = await this.prisma.user.create({
@@ -102,13 +110,17 @@ export class AuthService {
     });
 
     if (!user || user.deletedAt || !user.isActive) {
-      throw new UnauthorizedException(AUTH_CONSTANTS.ERRORS.INVALID_CREDENTIALS);
+      throw new UnauthorizedException(
+        AUTH_CONSTANTS.ERRORS.INVALID_CREDENTIALS,
+      );
     }
 
     // Check password
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
-      throw new UnauthorizedException(AUTH_CONSTANTS.ERRORS.INVALID_CREDENTIALS);
+      throw new UnauthorizedException(
+        AUTH_CONSTANTS.ERRORS.INVALID_CREDENTIALS,
+      );
     }
 
     // Check if email is verified
@@ -133,17 +145,21 @@ export class AuthService {
     };
   }
 
-  async refreshToken(refreshTokenDto: RefreshTokenDto): Promise<RefreshTokenResponse> {
-    const { refreshToken } = refreshTokenDto;
-
+  async refreshToken(refreshToken: string): Promise<RefreshTokenResponse> {
     // Find refresh token
     const tokenRecord = await this.prisma.refreshToken.findUnique({
       where: { token: refreshToken },
       include: { user: true },
     });
 
-    if (!tokenRecord || tokenRecord.user.deletedAt || !tokenRecord.user.isActive) {
-      throw new UnauthorizedException(AUTH_CONSTANTS.ERRORS.INVALID_REFRESH_TOKEN);
+    if (
+      !tokenRecord ||
+      tokenRecord.user.deletedAt ||
+      !tokenRecord.user.isActive
+    ) {
+      throw new UnauthorizedException(
+        AUTH_CONSTANTS.ERRORS.INVALID_REFRESH_TOKEN,
+      );
     }
 
     if (tokenRecord.expiresAt < new Date()) {
@@ -151,11 +167,16 @@ export class AuthService {
       await this.prisma.refreshToken.delete({
         where: { id: tokenRecord.id },
       });
-      throw new UnauthorizedException(AUTH_CONSTANTS.ERRORS.REFRESH_TOKEN_EXPIRED);
+      throw new UnauthorizedException(
+        AUTH_CONSTANTS.ERRORS.REFRESH_TOKEN_EXPIRED,
+      );
     }
 
     // Generate new tokens
-    const tokens = await this.generateTokens(tokenRecord.user.id, tokenRecord.user.email);
+    const tokens = await this.generateTokens(
+      tokenRecord.user.id,
+      tokenRecord.user.email,
+    );
 
     // Delete old refresh token
     await this.prisma.refreshToken.delete({
@@ -177,7 +198,9 @@ export class AuthService {
     return { message: AUTH_CONSTANTS.MESSAGES.LOGOUT_SUCCESS };
   }
 
-  async verifyEmail(verifyEmailDto: VerifyEmailDto): Promise<VerifyEmailResponse> {
+  async verifyEmail(
+    verifyEmailDto: VerifyEmailDto,
+  ): Promise<VerifyEmailResponse> {
     const { token } = verifyEmailDto;
 
     const user = await this.prisma.user.findUnique({
@@ -185,11 +208,15 @@ export class AuthService {
     });
 
     if (!user) {
-      throw new BadRequestException(AUTH_CONSTANTS.ERRORS.INVALID_VERIFICATION_TOKEN);
+      throw new BadRequestException(
+        AUTH_CONSTANTS.ERRORS.INVALID_VERIFICATION_TOKEN,
+      );
     }
 
     if (user.isEmailVerified) {
-      throw new BadRequestException(AUTH_CONSTANTS.ERRORS.EMAIL_ALREADY_VERIFIED);
+      throw new BadRequestException(
+        AUTH_CONSTANTS.ERRORS.EMAIL_ALREADY_VERIFIED,
+      );
     }
 
     // Update user
@@ -204,7 +231,9 @@ export class AuthService {
     return { message: AUTH_CONSTANTS.MESSAGES.EMAIL_VERIFIED_SUCCESS };
   }
 
-  async requestPasswordReset(requestPasswordResetDto: RequestPasswordResetDto): Promise<RequestPasswordResetResponse> {
+  async requestPasswordReset(
+    requestPasswordResetDto: RequestPasswordResetDto,
+  ): Promise<RequestPasswordResetResponse> {
     const { email } = requestPasswordResetDto;
 
     const user = await this.prisma.user.findUnique({
@@ -213,12 +242,18 @@ export class AuthService {
 
     if (!user) {
       // Don't reveal if user exists or not
-      return { message: AUTH_CONSTANTS.MESSAGES.PASSWORD_RESET_REQUEST_SUCCESS };
+      return {
+        message: AUTH_CONSTANTS.MESSAGES.PASSWORD_RESET_REQUEST_SUCCESS,
+      };
     }
 
     // Generate reset token
-    const resetToken = crypto.randomBytes(AUTH_CONSTANTS.TOKEN.PASSWORD_RESET_LENGTH).toString('hex');
-    const resetExpires = new Date(Date.now() + AUTH_CONSTANTS.EXPIRATION.PASSWORD_RESET);
+    const resetToken = crypto
+      .randomBytes(AUTH_CONSTANTS.TOKEN.PASSWORD_RESET_LENGTH)
+      .toString('hex');
+    const resetExpires = new Date(
+      Date.now() + AUTH_CONSTANTS.EXPIRATION.PASSWORD_RESET,
+    );
 
     // Update user
     await this.prisma.user.update({
@@ -235,19 +270,28 @@ export class AuthService {
     return { message: AUTH_CONSTANTS.MESSAGES.PASSWORD_RESET_REQUEST_SUCCESS };
   }
 
-  async resetPassword(resetPasswordDto: ResetPasswordDto): Promise<ResetPasswordResponse> {
+  async resetPassword(
+    resetPasswordDto: ResetPasswordDto,
+  ): Promise<ResetPasswordResponse> {
     const { token, password } = resetPasswordDto;
 
     const user = await this.prisma.user.findUnique({
       where: { resetPasswordToken: token },
     });
 
-    if (!user || !user.resetPasswordExpires || user.resetPasswordExpires < new Date()) {
+    if (
+      !user ||
+      !user.resetPasswordExpires ||
+      user.resetPasswordExpires < new Date()
+    ) {
       throw new BadRequestException(AUTH_CONSTANTS.ERRORS.INVALID_RESET_TOKEN);
     }
 
     // Hash new password
-    const hashedPassword = await bcrypt.hash(password, AUTH_CONSTANTS.PASSWORD.SALT_ROUNDS);
+    const hashedPassword = await bcrypt.hash(
+      password,
+      AUTH_CONSTANTS.PASSWORD.SALT_ROUNDS,
+    );
 
     // Update user
     await this.prisma.user.update({
@@ -265,28 +309,44 @@ export class AuthService {
     return { message: AUTH_CONSTANTS.MESSAGES.PASSWORD_RESET_SUCCESS };
   }
 
-  private async generateTokens(userId: string, email: string): Promise<AuthTokens> {
+  private async generateTokens(
+    userId: string,
+    email: string,
+  ): Promise<AuthTokens> {
     const payload: JwtPayload = { sub: userId, email };
-    const refreshPayload: JwtRefreshPayload = { 
-      ...payload, 
-      token: crypto.randomBytes(AUTH_CONSTANTS.TOKEN.REFRESH_TOKEN_LENGTH).toString('hex') 
+    const refreshPayload: JwtRefreshPayload = {
+      ...payload,
+      token: crypto
+        .randomBytes(AUTH_CONSTANTS.TOKEN.REFRESH_TOKEN_LENGTH)
+        .toString('hex'),
     };
 
-    const refreshSecret = this.configService.get<string>(AUTH_CONSTANTS.JWT.REFRESH_SECRET_KEY) || process.env.JWT_REFRESH_SECRET || AUTH_CONSTANTS.JWT.DEFAULT_REFRESH_SECRET;
-    const refreshExpiresIn = this.configService.get<string>(AUTH_CONSTANTS.JWT.REFRESH_EXPIRES_IN_KEY) || AUTH_CONSTANTS.JWT.DEFAULT_REFRESH_EXPIRES_IN;
+    const refreshSecret =
+      this.configService.get<string>(AUTH_CONSTANTS.JWT.REFRESH_SECRET_KEY) ||
+      process.env.JWT_REFRESH_SECRET ||
+      AUTH_CONSTANTS.JWT.DEFAULT_REFRESH_SECRET;
+    const refreshExpiresIn =
+      this.configService.get<string>(
+        AUTH_CONSTANTS.JWT.REFRESH_EXPIRES_IN_KEY,
+      ) || AUTH_CONSTANTS.JWT.DEFAULT_REFRESH_EXPIRES_IN;
 
     const accessToken = await this.jwtService.signAsync(payload);
-    const refreshToken = await this.jwtService.signAsync(refreshPayload as any, {
-      secret: refreshSecret,
-      expiresIn: refreshExpiresIn as any,
-    });
+    const refreshToken = await this.jwtService.signAsync(
+      refreshPayload as any,
+      {
+        secret: refreshSecret,
+        expiresIn: refreshExpiresIn as any,
+      },
+    );
 
     // Store refresh token in database
     const refreshTokenRecord = await this.prisma.refreshToken.create({
       data: {
         token: refreshToken,
         userId,
-        expiresAt: new Date(Date.now() + AUTH_CONSTANTS.EXPIRATION.REFRESH_TOKEN),
+        expiresAt: new Date(
+          Date.now() + AUTH_CONSTANTS.EXPIRATION.REFRESH_TOKEN,
+        ),
       },
     });
 

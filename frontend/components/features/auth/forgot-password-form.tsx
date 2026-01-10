@@ -34,8 +34,8 @@ export function ForgotPasswordForm() {
     try {
       await axios.post(`${BACKEND_API_URL}/auth/forgot-password`, data);
       setSuccess(true);
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to send reset email. Please try again.');
+    } catch (err: unknown) {
+      setError((err as { response?: { data?: { message?: string } } }).response?.data?.message || 'Failed to send reset email. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -47,7 +47,7 @@ export function ForgotPasswordForm() {
         <CardHeader>
           <CardTitle>Check your email</CardTitle>
           <CardDescription>
-            We've sent a password reset link to your email address.
+            We&apos;ve sent a password reset link to your email address.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -71,7 +71,7 @@ export function ForgotPasswordForm() {
       <CardHeader>
         <CardTitle>Forgot password?</CardTitle>
         <CardDescription>
-          Enter your email address and we'll send you a link to reset your password.
+          Enter your email address and we&apos;ll send you a link to reset your password.
         </CardDescription>
       </CardHeader>
       <CardContent>

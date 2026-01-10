@@ -1,14 +1,17 @@
 'use client';
 
 import { PatientCard } from './patient-card';
+import { PatientTable } from './patient-table';
 import { EmptyState } from '@/components/common/empty-state';
-import { Users, UserPlus } from 'lucide-react';
+import { Users } from 'lucide-react';
 import { LoadingSpinner } from '@/components/common/loading-spinner';
 import type { Patient } from '@/types/patient.types';
+import type { ViewType } from '@/components/common/view-toggle';
 
 interface PatientListProps {
   patients: Patient[];
   isLoading?: boolean;
+  view?: ViewType;
   onView?: (id: string) => void;
   onEdit?: (id: string) => void;
   onNewVisit?: (id: string) => void;
@@ -18,6 +21,7 @@ interface PatientListProps {
 export function PatientList({
   patients,
   isLoading,
+  view = 'card',
   onView,
   onEdit,
   onNewVisit,
@@ -45,6 +49,17 @@ export function PatientList({
               }
             : undefined
         }
+      />
+    );
+  }
+
+  if (view === 'list') {
+    return (
+      <PatientTable
+        patients={patients}
+        onView={onView}
+        onEdit={onEdit}
+        onNewVisit={onNewVisit}
       />
     );
   }

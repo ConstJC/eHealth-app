@@ -37,8 +37,8 @@ export function RegisterForm() {
       setTimeout(() => {
         router.push(`${ROUTES.VERIFY_EMAIL}?email=${encodeURIComponent(data.email)}`);
       }, 2000);
-    } catch (err: any) {
-      setError(err.message || 'Registration failed. Please try again.');
+    } catch (err: unknown) {
+      setError((err as { message?: string }).message || 'Registration failed. Please try again.');
     }
   };
 

@@ -1,32 +1,32 @@
 import { useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/auth-store';
-import apiClient from '@/lib/api-client';
-import type { LoginCredentials, RegisterData, AuthResponse } from '@/types';
+import type { RegisterData, AuthResponse } from '@/types';
 import { ROUTES } from '@/lib/constants';
 
 export function useAuth() {
   const router = useRouter();
-  const { user, isAuthenticated, setUser, setTokens, logout, setLoading } = useAuthStore();
+  const { user, isAuthenticated, setUser, setAccessToken, logout, setLoading } = useAuthStore();
 
   const login = useCallback(
     async (authResponse: AuthResponse): Promise<AuthResponse> => {
       setLoading(true);
       try {
-        const { user, accessToken, refreshToken } = authResponse;
+        const { user, accessToken } = authResponse;
+        // Note: refreshToken is in httpOnly cookie, not in response
 
-        // Set tokens first, then user, to ensure isAuthenticated is set correctly
-        setTokens(accessToken, refreshToken);
+        // Set access token in memory, then user
+        setAccessToken(accessToken);
         setUser(user);
 
         return authResponse;
-      } catch (error: any) {
-        throw error.response?.data || { message: 'Login failed' };
+      } catch (error: unknown) {
+        throw (error as { response?: { data?: unknown } }).response?.data || { message: 'Login failed' };
       } finally {
         setLoading(false);
       }
     },
-    [setUser, setTokens, setLoading]
+    [setUser, setAccessToken, setLoading]
   );
 
   const register = useCallback(
@@ -46,8 +46,8 @@ export function useAuth() {
         }
 
         return await response.json();
-      } catch (error: any) {
-        throw { message: error.message || 'Registration failed' };
+      } catch (error: unknown) {
+        throw { message: (error as Error).message || 'Registration failed' };
       } finally {
         setLoading(false);
       }
@@ -55,9 +55,26 @@ export function useAuth() {
     [setLoading]
   );
 
-  const logoutUser = useCallback(() => {
-    logout();
-    router.push(ROUTES.LOGIN);
+  const logoutUser = useCallback(async () => {
+    try {
+      // Call logout API to clear server-side tokens
+      await fetch('/api/auth/logout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+    } catch (error) {
+      // Even if API call fails, continue with client-side logout
+      console.error('Logout API call failed:', error);
+    } finally {
+      // Clear client-side state
+      logout();
+      // Get current language from pathname or use default
+      const pathname = window.location.pathname;
+      const languageMatch = pathname.match(/^\/([^/]+)/);
+      const language = languageMatch ? languageMatch[1] : 'en';
+      // Redirect to sign-in with language prefix
+      router.push(`/${language}/sign-in`);
+    }
   }, [logout, router]);
 
   return {

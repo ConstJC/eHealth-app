@@ -5,9 +5,9 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Avatar } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { MoreVertical, User, Calendar } from 'lucide-react';
-import { calculateAge, formatDate, formatPatientId } from '@/lib/formatters';
-import type { Patient, PatientStatus } from '@/types/patient.types';
+import { MoreVertical, User, Calendar, Phone, Mail, MapPin, Droplet, AlertTriangle } from 'lucide-react';
+import { calculateAge, formatPatientId, formatDate, formatPhone } from '@/lib/formatters';
+import type { Patient } from '@/types/patient.types';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -26,11 +26,13 @@ export function PatientCard({ patient, onView, onEdit, onNewVisit }: PatientCard
   const age = calculateAge(patient.dateOfBirth);
   const initials = `${patient.firstName[0]}${patient.lastName[0]}`;
   const statusVariant = patient.status === 'ACTIVE' ? 'success' : 'outline';
+  const hasAllergies = patient.allergies && patient.allergies.length > 0;
+  const hasChronicConditions = patient.chronicConditions && patient.chronicConditions.length > 0;
 
   return (
     <Card className="hover:shadow-md transition-shadow">
-      <CardContent className="p-4">
-        <div className="flex items-start justify-between">
+      <CardContent className="p-5">
+        <div className="flex items-start justify-between mb-4">
           <div className="flex items-center gap-3 flex-1 min-w-0">
             <Link href={`/patients/${patient.id}`}>
               <Avatar
@@ -46,28 +48,9 @@ export function PatientCard({ patient, onView, onEdit, onNewVisit }: PatientCard
                   {patient.firstName} {patient.lastName}
                 </h3>
               </Link>
-              <p className="text-sm text-gray-500 font-mono">
+              <p className="text-sm text-gray-500 font-mono mt-0.5">
                 {formatPatientId(patient.patientId)}
               </p>
-              <div className="flex items-center gap-2 mt-1 flex-wrap">
-                {age !== null && (
-                  <span className="text-sm text-gray-600">
-                    {age} yrs
-                  </span>
-                )}
-                <span className="text-sm text-gray-400">•</span>
-                <span className="text-sm text-gray-600 capitalize">
-                  {patient.gender.toLowerCase()}
-                </span>
-                <Badge variant={statusVariant} className="text-xs">
-                  {patient.status}
-                </Badge>
-              </div>
-              {patient.phone && (
-                <p className="text-xs text-gray-500 mt-1 truncate">
-                  {patient.phone}
-                </p>
-              )}
             </div>
           </div>
           <DropdownMenu>
@@ -90,6 +73,81 @@ export function PatientCard({ patient, onView, onEdit, onNewVisit }: PatientCard
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+        </div>
+
+        {/* Key Information */}
+        <div className="space-y-2 mb-4">
+          <div className="flex items-center gap-2 flex-wrap">
+            {age !== null && (
+              <span className="text-sm text-gray-700">
+                {age} yrs
+              </span>
+            )}
+            <span className="text-sm text-gray-400">•</span>
+            <span className="text-sm text-gray-700 capitalize">
+              {patient.gender.toLowerCase()}
+            </span>
+            <span className="text-sm text-gray-400">•</span>
+            <span className="text-sm text-gray-700">
+              {formatDate(patient.dateOfBirth)}
+            </span>
+            <Badge variant={statusVariant} className="text-xs ml-auto">
+              {patient.status}
+            </Badge>
+          </div>
+        </div>
+
+        {/* Contact Information */}
+        <div className="space-y-2 mb-4 pb-4 border-b border-gray-200">
+          {patient.phone && (
+            <div className="flex items-center gap-2 text-sm text-gray-600">
+              <Phone className="h-3.5 w-3.5 text-gray-400" />
+              <span className="truncate">{formatPhone(patient.phone)}</span>
+            </div>
+          )}
+          {patient.email && (
+            <div className="flex items-center gap-2 text-sm text-gray-600">
+              <Mail className="h-3.5 w-3.5 text-gray-400" />
+              <span className="truncate">{patient.email}</span>
+            </div>
+          )}
+          {patient.address && (
+            <div className="flex items-center gap-2 text-sm text-gray-600">
+              <MapPin className="h-3.5 w-3.5 text-gray-400" />
+              <span className="truncate">{patient.address}</span>
+            </div>
+          )}
+        </div>
+
+        {/* Medical Information */}
+        <div className="space-y-2">
+          {patient.bloodType && (
+            <div className="flex items-center gap-2 text-sm text-gray-600">
+              <Droplet className="h-3.5 w-3.5 text-red-400" />
+              <span>Blood Type: {patient.bloodType}</span>
+            </div>
+          )}
+          {hasAllergies && (
+            <div className="flex items-start gap-2 text-sm">
+              <AlertTriangle className="h-3.5 w-3.5 text-amber-500 mt-0.5 flex-shrink-0" />
+              <div className="flex-1 min-w-0">
+                <span className="text-gray-600">Allergies: </span>
+                <span className="text-amber-700 font-medium">
+                  {patient.allergies.slice(0, 2).join(', ')}
+                  {patient.allergies.length > 2 && ` +${patient.allergies.length - 2} more`}
+                </span>
+              </div>
+            </div>
+          )}
+          {hasChronicConditions && (
+            <div className="text-sm text-gray-600">
+              <span>Conditions: </span>
+              <span className="font-medium text-gray-700">
+                {patient.chronicConditions.slice(0, 2).join(', ')}
+                {patient.chronicConditions.length > 2 && ` +${patient.chronicConditions.length - 2} more`}
+              </span>
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>

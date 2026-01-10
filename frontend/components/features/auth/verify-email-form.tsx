@@ -17,15 +17,6 @@ export function VerifyEmailForm() {
   const [message, setMessage] = useState<string>('');
   const token = searchParams.get('token');
 
-  useEffect(() => {
-    if (token) {
-      verifyEmail(token);
-    } else {
-      setStatus('error');
-      setMessage('Verification token is missing. Please check your email for the correct link.');
-    }
-  }, [token]);
-
   const verifyEmail = async (verificationToken: string) => {
     try {
       const response = await axios.get(`${BACKEND_API_URL}/auth/verify-email`, {
@@ -35,15 +26,25 @@ export function VerifyEmailForm() {
       setMessage(response.data.message || 'Email verified successfully!');
       setTimeout(() => {
         router.push(ROUTES.LOGIN);
-      }, 3000);
-    } catch (err: any) {
+      }, 3000      );
+    } catch (err: unknown) {
       setStatus('error');
       setMessage(
-        err.response?.data?.message ||
+        (err as { response?: { data?: { message?: string } } }).response?.data?.message ||
           'Email verification failed. The link may have expired. Please request a new verification email.'
       );
     }
   };
+
+  useEffect(() => {
+    if (token) {
+      verifyEmail(token);
+    } else {
+      setStatus('error');
+      setMessage('Verification token is missing. Please check your email for the correct link.');
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [token]);
 
   if (status === 'loading') {
     return (

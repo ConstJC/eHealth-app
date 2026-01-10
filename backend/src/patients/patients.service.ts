@@ -67,12 +67,39 @@ export class PatientsService {
       ...(status && { status }),
       ...(search && {
         OR: [
-          { patientId: { contains: search, mode: 'insensitive' as Prisma.QueryMode } },
-          { firstName: { contains: search, mode: 'insensitive' as Prisma.QueryMode } },
-          { lastName: { contains: search, mode: 'insensitive' as Prisma.QueryMode } },
-          { phone: { contains: search, mode: 'insensitive' as Prisma.QueryMode } },
+          {
+            patientId: {
+              contains: search,
+              mode: 'insensitive' as Prisma.QueryMode,
+            },
+          },
+          {
+            firstName: {
+              contains: search,
+              mode: 'insensitive' as Prisma.QueryMode,
+            },
+          },
+          {
+            lastName: {
+              contains: search,
+              mode: 'insensitive' as Prisma.QueryMode,
+            },
+          },
+          {
+            phone: {
+              contains: search,
+              mode: 'insensitive' as Prisma.QueryMode,
+            },
+          },
           ...(search.includes('@')
-            ? [{ email: { contains: search, mode: 'insensitive' as Prisma.QueryMode } }]
+            ? [
+                {
+                  email: {
+                    contains: search,
+                    mode: 'insensitive' as Prisma.QueryMode,
+                  },
+                },
+              ]
             : []),
         ],
       }),

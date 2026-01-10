@@ -36,7 +36,8 @@ const Dialog = ({ open = false, onOpenChange, children }: DialogProps) => {
     if (isControlled) {
       setIsOpen(open);
     }
-  }, [open, isControlled, setIsOpen]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, isControlled]);
 
   React.useEffect(() => {
     if (isOpen) {

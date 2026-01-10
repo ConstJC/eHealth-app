@@ -96,13 +96,222 @@ async function main() {
   console.log('✅ Receptionist created:', { id: receptionist.id, email: receptionist.email });
 
   // ============================================
+  // CREATE MENU ITEMS
+  // ============================================
+
+  // Top-level menu items
+  const topLevelMenuItems = [
+    {
+      label: 'Dashboard',
+      href: '/dashboard',
+      icon: 'LayoutDashboard',
+      order: 0,
+      roles: [Role.ADMIN, Role.DOCTOR, Role.NURSE, Role.RECEPTIONIST],
+    },
+    {
+      label: 'Patients',
+      href: '/patients',
+      icon: 'Users',
+      order: 1,
+      roles: [Role.ADMIN, Role.DOCTOR, Role.NURSE, Role.RECEPTIONIST],
+    },
+    {
+      label: 'Visits',
+      href: '/visits',
+      icon: 'FileText',
+      order: 2,
+      roles: [Role.ADMIN, Role.DOCTOR, Role.NURSE],
+    },
+    {
+      label: 'Prescriptions',
+      href: '/prescriptions',
+      icon: 'Pill',
+      order: 3,
+      roles: [Role.ADMIN, Role.DOCTOR, Role.PHARMACIST],
+    },
+    {
+      label: 'Billing',
+      href: '/billing',
+      icon: 'Receipt',
+      order: 4,
+      roles: [Role.ADMIN, Role.RECEPTIONIST],
+    },
+    {
+      label: 'Reports',
+      href: '/reports',
+      icon: 'BarChart3',
+      order: 5,
+      roles: [Role.ADMIN, Role.DOCTOR],
+    },
+  ];
+
+  // Settings sub-menu items (children of Settings)
+  const settingsSubMenuItems = [
+    {
+      label: 'Users',
+      href: '/settings/users',
+      icon: 'Users',
+      order: 0,
+      roles: [Role.ADMIN],
+    },
+    {
+      label: 'Menus',
+      href: '/settings/menus',
+      icon: 'Menu',
+      order: 1,
+      roles: [Role.ADMIN],
+    },
+    {
+      label: 'Roles',
+      href: '/settings/roles',
+      icon: 'Shield',
+      order: 2,
+      roles: [Role.ADMIN],
+    },
+    {
+      label: 'System',
+      href: '/settings/system',
+      icon: 'Settings',
+      order: 3,
+      roles: [Role.ADMIN],
+    },
+    {
+      label: 'Audit Logs',
+      href: '/settings/audit-logs',
+      icon: 'FileText',
+      order: 4,
+      roles: [Role.ADMIN],
+    },
+  ];
+
+  console.log('\n📋 Creating top-level menu items...');
+  for (const menuItemData of topLevelMenuItems) {
+    // Check if menu item already exists
+    const existing = await prisma.menuItem.findFirst({
+      where: {
+        href: menuItemData.href,
+        deletedAt: null,
+      },
+    });
+
+    if (existing) {
+      console.log(`⏭️  Menu item "${menuItemData.label}" already exists, skipping...`);
+      continue;
+    }
+
+    // Create menu item
+    const menuItem = await prisma.menuItem.create({
+      data: {
+        label: menuItemData.label,
+        href: menuItemData.href,
+        icon: menuItemData.icon,
+        order: menuItemData.order,
+        isActive: true,
+      },
+    });
+
+    // Assign to roles
+    for (const role of menuItemData.roles) {
+      await prisma.roleMenu.create({
+        data: {
+          role,
+          menuItemId: menuItem.id,
+          isVisible: true,
+        },
+      });
+    }
+
+    console.log(`✅ Menu item "${menuItemData.label}" created and assigned to ${menuItemData.roles.length} role(s)`);
+  }
+
+  // Create Settings parent menu item
+  console.log('\n📋 Creating Settings menu item...');
+  let settingsMenuItem = await prisma.menuItem.findFirst({
+    where: {
+      href: '/settings',
+      deletedAt: null,
+    },
+  });
+
+  if (!settingsMenuItem) {
+    settingsMenuItem = await prisma.menuItem.create({
+      data: {
+        label: 'Settings',
+        href: '/settings',
+        icon: 'Settings',
+        order: 6,
+        isActive: true,
+      },
+    });
+
+    // Assign Settings to ADMIN role
+    await prisma.roleMenu.create({
+      data: {
+        role: Role.ADMIN,
+        menuItemId: settingsMenuItem.id,
+        isVisible: true,
+      },
+    });
+
+    console.log(`✅ Settings menu item created and assigned to ADMIN role`);
+  } else {
+    console.log(`⏭️  Settings menu item already exists, using existing...`);
+  }
+
+  // Create Settings sub-menu items
+  console.log('\n📋 Creating Settings sub-menu items...');
+  for (const subMenuItemData of settingsSubMenuItems) {
+    // Check if sub-menu item already exists
+    const existing = await prisma.menuItem.findFirst({
+      where: {
+        href: subMenuItemData.href,
+        deletedAt: null,
+      },
+    });
+
+    if (existing) {
+      console.log(`⏭️  Sub-menu item "${subMenuItemData.label}" already exists, skipping...`);
+      continue;
+    }
+
+    // Create sub-menu item with parentId
+    const subMenuItem = await prisma.menuItem.create({
+      data: {
+        label: subMenuItemData.label,
+        href: subMenuItemData.href,
+        icon: subMenuItemData.icon,
+        order: subMenuItemData.order,
+        isActive: true,
+        parentId: settingsMenuItem.id,
+      },
+    });
+
+    // Assign to roles
+    for (const role of subMenuItemData.roles) {
+      await prisma.roleMenu.create({
+        data: {
+          role,
+          menuItemId: subMenuItem.id,
+          isVisible: true,
+        },
+      });
+    }
+
+    console.log(`✅ Sub-menu item "${subMenuItemData.label}" created under Settings and assigned to ${subMenuItemData.roles.length} role(s)`);
+  }
+
+  console.log('✅ Menu items seeding completed');
+
+  // ============================================
   // CREATE PATIENTS
   // ============================================
 
   const currentYear = new Date().getFullYear();
 
-  const patient1 = await prisma.patient.create({
-    data: {
+  const patient1 = await prisma.patient.upsert({
+    where: { patientId: `P${currentYear}00001` },
+    update: {},
+    create: {
       patientId: `P${currentYear}00001`,
       firstName: 'James',
       lastName: 'Anderson',
@@ -123,8 +332,10 @@ async function main() {
   });
   console.log('✅ Patient 1 created:', { id: patient1.id, patientId: patient1.patientId });
 
-  const patient2 = await prisma.patient.create({
-    data: {
+  const patient2 = await prisma.patient.upsert({
+    where: { patientId: `P${currentYear}00002` },
+    update: {},
+    create: {
       patientId: `P${currentYear}00002`,
       firstName: 'Maria',
       lastName: 'Garcia',
@@ -147,8 +358,10 @@ async function main() {
   });
   console.log('✅ Patient 2 created:', { id: patient2.id, patientId: patient2.patientId });
 
-  const patient3 = await prisma.patient.create({
-    data: {
+  const patient3 = await prisma.patient.upsert({
+    where: { patientId: `P${currentYear}00003` },
+    update: {},
+    create: {
       patientId: `P${currentYear}00003`,
       firstName: 'Robert',
       lastName: 'Thompson',
@@ -171,8 +384,10 @@ async function main() {
   });
   console.log('✅ Patient 3 created:', { id: patient3.id, patientId: patient3.patientId });
 
-  const patient4 = await prisma.patient.create({
-    data: {
+  const patient4 = await prisma.patient.upsert({
+    where: { patientId: `P${currentYear}00004` },
+    update: {},
+    create: {
       patientId: `P${currentYear}00004`,
       firstName: 'Emily',
       lastName: 'Chen',
@@ -361,8 +576,10 @@ async function main() {
   // CREATE INVOICES
   // ============================================
 
-  const invoice1 = await prisma.invoice.create({
-    data: {
+  const invoice1 = await prisma.invoice.upsert({
+    where: { invoiceNumber: `INV-${currentYear}-00001` },
+    update: {},
+    create: {
       invoiceNumber: `INV-${currentYear}-00001`,
       patientId: patient1.id,
       visitId: visit1.id,
@@ -396,8 +613,10 @@ async function main() {
   });
   console.log('✅ Invoice 1 created:', { id: invoice1.id, invoiceNumber: invoice1.invoiceNumber });
 
-  const invoice2 = await prisma.invoice.create({
-    data: {
+  const invoice2 = await prisma.invoice.upsert({
+    where: { invoiceNumber: `INV-${currentYear}-00002` },
+    update: {},
+    create: {
       invoiceNumber: `INV-${currentYear}-00002`,
       patientId: patient3.id,
       visitId: visit3.id,
@@ -438,8 +657,10 @@ async function main() {
   });
   console.log('✅ Invoice 2 created:', { id: invoice2.id, invoiceNumber: invoice2.invoiceNumber });
 
-  const invoice3 = await prisma.invoice.create({
-    data: {
+  const invoice3 = await prisma.invoice.upsert({
+    where: { invoiceNumber: `INV-${currentYear}-00003` },
+    update: {},
+    create: {
       invoiceNumber: `INV-${currentYear}-00003`,
       patientId: patient2.id,
       visitId: visit2.id,
@@ -476,6 +697,9 @@ async function main() {
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
   console.log('\n📊 Sample Data Created:');
   console.log(`- 5 Users (1 Admin, 2 Doctors, 1 Nurse, 1 Receptionist)`);
+  console.log(`- ${topLevelMenuItems.length} Top-level Menu Items (with role assignments)`);
+  console.log(`- 1 Settings Menu Item (parent)`);
+  console.log(`- ${settingsSubMenuItems.length} Settings Sub-menu Items (Users, Menus, Roles, System, Audit Logs)`);
   console.log(`- 4 Patients`);
   console.log(`- 3 Visits (2 completed, 1 in progress)`);
   console.log(`- 3 Prescriptions`);

@@ -8,6 +8,7 @@ const apiClient = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+  withCredentials: true, // Send cookies (for refresh token)
 });
 
 // Request interceptor - Add auth token to requests
@@ -35,22 +36,28 @@ apiClient.interceptors.response.use(
       originalRequest._retry = true;
 
       try {
-        const refreshToken = tokenStorage.getRefreshToken();
-        if (!refreshToken) {
-          throw new Error('No refresh token available');
-        }
-
-        // Try to refresh the token
+        // Try to refresh the token using httpOnly cookie (no body needed)
         const response = await axios.post<AuthTokens>(
           `${API_BASE_URL}/auth/refresh`,
-          { refreshToken }
+          {}, // Empty body - refresh token comes from httpOnly cookie
+          {
+            withCredentials: true, // Send cookies
+          }
         );
 
-        const { accessToken, refreshToken: newRefreshToken } = response.data;
+        const { accessToken } = response.data;
+        // Note: refreshToken is in httpOnly cookie, not in response
 
-        // Update tokens in storage
+        // Update access token in memory storage and Zustand store
         tokenStorage.setAccessToken(accessToken);
-        tokenStorage.setRefreshToken(newRefreshToken);
+        
+        // Also update Zustand store if available
+        try {
+          const { useAuthStore } = await import('@/store/auth-store');
+          useAuthStore.getState().setAccessToken(accessToken);
+        } catch {
+          // Store might not be available in all contexts
+        }
 
         // Update the original request with new token
         if (originalRequest.headers) {
@@ -63,7 +70,10 @@ apiClient.interceptors.response.use(
         // Refresh failed, clear tokens and redirect to login
         tokenStorage.clear();
         if (typeof window !== 'undefined') {
-          window.location.href = '/login';
+          // Get current language from pathname or use default
+          const { getLanguageFromPath, getLoginRoute } = await import('./utils/route-helpers');
+          const language = getLanguageFromPath(window.location.pathname);
+          window.location.href = getLoginRoute(language);
         }
         return Promise.reject(refreshError);
       }

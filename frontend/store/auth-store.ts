@@ -5,11 +5,12 @@ import { tokenStorage } from '@/lib/auth';
 
 interface AuthState {
   user: User | null;
+  accessToken: string | null; // Stored in memory, not persisted
   isAuthenticated: boolean;
   isLoading: boolean;
   hasHydrated: boolean;
   setUser: (user: User | null) => void;
-  setTokens: (accessToken: string, refreshToken: string) => void;
+  setAccessToken: (accessToken: string) => void;
   logout: () => void;
   setLoading: (loading: boolean) => void;
   setHasHydrated: (hasHydrated: boolean) => void;
@@ -19,6 +20,7 @@ export const useAuthStore = create<AuthState>()(
   persist(
     (set, get) => ({
       user: null,
+      accessToken: null, // In-memory, not persisted
       isAuthenticated: false,
       isLoading: false,
       hasHydrated: false,
@@ -26,24 +28,21 @@ export const useAuthStore = create<AuthState>()(
         if (user) {
           tokenStorage.setUser(user);
         }
-        // Check if we have tokens to determine auth status
-        const accessToken = tokenStorage.getAccessToken();
+        // Check if we have access token to determine auth status
+        const accessToken = get().accessToken || tokenStorage.getAccessToken();
         const isAuthenticated = !!(user && accessToken);
         set({ user, isAuthenticated });
       },
-      setTokens: (accessToken, refreshToken) => {
+      setAccessToken: (accessToken) => {
+        // Store in both Zustand state and tokenStorage memory
         tokenStorage.setAccessToken(accessToken);
-        tokenStorage.setRefreshToken(refreshToken);
-        // Update isAuthenticated if we have tokens
-        // Check both current user in store and in localStorage
         const currentUser = get().user || tokenStorage.getUser();
-        if (currentUser && accessToken) {
-          set({ isAuthenticated: true });
-        }
+        const isAuthenticated = !!(currentUser && accessToken);
+        set({ accessToken, isAuthenticated });
       },
       logout: () => {
         tokenStorage.clear();
-        set({ user: null, isAuthenticated: false });
+        set({ user: null, accessToken: null, isAuthenticated: false });
       },
       setLoading: (loading) => set({ isLoading: loading }),
       setHasHydrated: (hasHydrated) => set({ hasHydrated }),
@@ -51,18 +50,17 @@ export const useAuthStore = create<AuthState>()(
     {
       name: 'auth-storage',
       storage: createJSONStorage(() => localStorage),
-      partialize: (state) => ({ user: state.user }),
+      partialize: (state) => ({ user: state.user }), // Only persist user, not tokens
       onRehydrateStorage: () => (state) => {
-        // After rehydration, check if we have tokens and user
+        // After rehydration, restore user but not tokens
+        // Access token will be fetched on first API call if needed
         if (state && typeof window !== 'undefined') {
-          const accessToken = tokenStorage.getAccessToken();
           const user = state.user || tokenStorage.getUser();
           
-          // Set authentication status based on both user and token
-          const isAuthenticated = !!(user && accessToken);
-          
+          // Don't set isAuthenticated here - it will be set when access token is available
           state.user = user;
-          state.isAuthenticated = isAuthenticated;
+          state.accessToken = null; // Access token not persisted
+          state.isAuthenticated = false; // Will be set when token is available
           state.hasHydrated = true;
         } else if (state) {
           // Server-side: mark as hydrated but not authenticated

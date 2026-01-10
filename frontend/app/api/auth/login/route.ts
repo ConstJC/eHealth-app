@@ -8,9 +8,8 @@ const BACKEND_API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:408
 export async function POST(request: NextRequest) {
   try {
     const body: LoginCredentials = await request.json();
-    console.log(BACKEND_API_URL);
     
-    // Call backend API directly
+    // Call backend API with credentials to receive cookies
     const response = await axios.post<AuthResponse>(
       `${BACKEND_API_URL}/auth/login`,
       body,
@@ -18,13 +17,26 @@ export async function POST(request: NextRequest) {
         headers: {
           'Content-Type': 'application/json',
         },
+        withCredentials: true, // Send and receive cookies
       }
     );
     
-    return NextResponse.json(response.data, { status: 200 });
-  } catch (error: any) {
-    const status = error.response?.status || 500;
-    const message = error.response?.data?.message || 'Login failed';
+    // Create Next.js response with data
+    const nextResponse = NextResponse.json(response.data, { status: 200 });
+    
+    // Forward Set-Cookie header from backend to frontend
+    const setCookieHeader = response.headers['set-cookie'];
+    if (setCookieHeader) {
+      // Set the cookie in the Next.js response
+      setCookieHeader.forEach((cookie) => {
+        nextResponse.headers.append('Set-Cookie', cookie);
+      });
+    }
+    
+    return nextResponse;
+  } catch (error: unknown) {
+    const status = (error as { response?: { status?: number } }).response?.status || 500;
+    const message = (error as { response?: { data?: { message?: string } } }).response?.data?.message || 'Login failed';
     
     return NextResponse.json(
       { message },

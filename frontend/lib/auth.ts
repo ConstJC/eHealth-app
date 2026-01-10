@@ -11,36 +11,40 @@ export interface User {
 
 export interface AuthTokens {
   accessToken: string;
-  refreshToken: string;
+  refreshToken?: string; // Optional since refresh token is in httpOnly cookie
 }
 
 export interface LoginResponse {
   message: string;
   user: User;
   accessToken: string;
-  refreshToken: string;
+  // refreshToken is no longer in response, it's in httpOnly cookie
 }
+
+// In-memory storage for access token (cleared on tab close)
+let accessTokenMemory: string | null = null;
 
 // Token storage utilities
 export const tokenStorage = {
   getAccessToken: (): string | null => {
-    if (typeof window === 'undefined') return null;
-    return localStorage.getItem(AUTH_STORAGE_KEYS.ACCESS_TOKEN);
+    // Return from memory (not localStorage)
+    return accessTokenMemory;
   },
 
   setAccessToken: (token: string): void => {
-    if (typeof window === 'undefined') return;
-    localStorage.setItem(AUTH_STORAGE_KEYS.ACCESS_TOKEN, token);
+    // Store in memory only (not localStorage)
+    accessTokenMemory = token;
   },
 
+  // Refresh token is now in httpOnly cookie, not accessible via JavaScript
   getRefreshToken: (): string | null => {
-    if (typeof window === 'undefined') return null;
-    return localStorage.getItem(AUTH_STORAGE_KEYS.REFRESH_TOKEN);
+    // Refresh token is in httpOnly cookie, not accessible via JavaScript
+    return null;
   },
 
-  setRefreshToken: (token: string): void => {
-    if (typeof window === 'undefined') return;
-    localStorage.setItem(AUTH_STORAGE_KEYS.REFRESH_TOKEN, token);
+  setRefreshToken: (): void => {
+    // Refresh token is set as httpOnly cookie by backend, no need to store here
+    // This method is kept for backward compatibility but does nothing
   },
 
   getUser: (): User | null => {
@@ -60,10 +64,13 @@ export const tokenStorage = {
   },
 
   clear: (): void => {
-    if (typeof window === 'undefined') return;
-    localStorage.removeItem(AUTH_STORAGE_KEYS.ACCESS_TOKEN);
-    localStorage.removeItem(AUTH_STORAGE_KEYS.REFRESH_TOKEN);
-    localStorage.removeItem(AUTH_STORAGE_KEYS.USER);
+    // Clear access token from memory
+    accessTokenMemory = null;
+    // Clear user from localStorage
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem(AUTH_STORAGE_KEYS.USER);
+    }
+    // Note: Refresh token cookie is cleared by backend on logout
   },
 };
 

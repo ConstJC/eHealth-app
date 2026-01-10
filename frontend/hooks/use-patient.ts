@@ -14,7 +14,12 @@ export function usePatient() {
       // Call Next.js API route
       const queryParams = new URLSearchParams();
       if (params?.search) queryParams.append('search', params.search);
+      if (params?.name) queryParams.append('name', params.name);
+      if (params?.patientId) queryParams.append('patientId', params.patientId);
+      if (params?.dateOfBirth) queryParams.append('dateOfBirth', params.dateOfBirth);
       if (params?.status) queryParams.append('status', params.status);
+      if (params?.phone) queryParams.append('phone', params.phone);
+      if (params?.email) queryParams.append('email', params.email);
       if (params?.page) queryParams.append('page', params.page.toString());
       if (params?.limit) queryParams.append('limit', params.limit.toString());
 
@@ -32,8 +37,8 @@ export function usePatient() {
       }
 
       return await response.json();
-    } catch (err: any) {
-      const errorMessage = err.message || 'Failed to fetch patients';
+    } catch (err: unknown) {
+      const errorMessage = (err as Error).message || 'Failed to fetch patients';
       setError(errorMessage);
       throw new Error(errorMessage);
     } finally {
@@ -59,8 +64,8 @@ export function usePatient() {
       }
 
       return await response.json();
-    } catch (err: any) {
-      const errorMessage = err.message || 'Failed to fetch patient';
+    } catch (err: unknown) {
+      const errorMessage = (err as Error).message || 'Failed to fetch patient';
       setError(errorMessage);
       throw new Error(errorMessage);
     } finally {
@@ -74,8 +79,8 @@ export function usePatient() {
     try {
       const response = await apiClient.post<Patient>('/patients', data);
       return response.data;
-    } catch (err: any) {
-      const errorMessage = err.response?.data?.message || 'Failed to create patient';
+    } catch (err: unknown) {
+      const errorMessage = (err as { response?: { data?: { message?: string } } }).response?.data?.message || 'Failed to create patient';
       setError(errorMessage);
       throw new Error(errorMessage);
     } finally {
@@ -89,8 +94,8 @@ export function usePatient() {
     try {
       const response = await apiClient.patch<Patient>(`/patients/${id}`, data);
       return response.data;
-    } catch (err: any) {
-      const errorMessage = err.response?.data?.message || 'Failed to update patient';
+    } catch (err: unknown) {
+      const errorMessage = (err as { response?: { data?: { message?: string } } }).response?.data?.message || 'Failed to update patient';
       setError(errorMessage);
       throw new Error(errorMessage);
     } finally {
@@ -103,8 +108,8 @@ export function usePatient() {
     setError(null);
     try {
       await apiClient.delete(`/patients/${id}`);
-    } catch (err: any) {
-      const errorMessage = err.response?.data?.message || 'Failed to delete patient';
+    } catch (err: unknown) {
+      const errorMessage = (err as { response?: { data?: { message?: string } } }).response?.data?.message || 'Failed to delete patient';
       setError(errorMessage);
       throw new Error(errorMessage);
     } finally {
@@ -122,4 +127,3 @@ export function usePatient() {
     error,
   };
 }
-

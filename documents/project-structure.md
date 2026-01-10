@@ -80,81 +80,221 @@ apps/frontend/
 │
 ├── src/
 │   ├── app/                     # Next.js App Router
-│   │   ├── (auth)/             # Auth route group (no auth layout)
-│   │   │   ├── login/
-│   │   │   │   └── page.tsx
-│   │   │   ├── register/
-│   │   │   │   └── page.tsx
-│   │   │   ├── forgot-password/
-│   │   │   │   └── page.tsx
-│   │   │   ├── reset-password/
-│   │   │   │   └── page.tsx
-│   │   │   ├── verify-email/
-│   │   │   │   └── page.tsx
-│   │   │   └── layout.tsx      # Auth pages layout
-│   │   │
-│   │   ├── (dashboard)/        # Dashboard route group (with sidebar)
-│   │   │   ├── dashboard/
-│   │   │   │   └── page.tsx    # Main dashboard
-│   │   │   │
-│   │   │   ├── patients/
-│   │   │   │   ├── page.tsx                    # Patient list
-│   │   │   │   ├── new/
-│   │   │   │   │   └── page.tsx               # New patient form
-│   │   │   │   └── [id]/
-│   │   │   │       ├── page.tsx               # Patient detail
-│   │   │   │       ├── edit/
-│   │   │   │       │   └── page.tsx          # Edit patient
-│   │   │   │       └── visits/
-│   │   │   │           └── new/
-│   │   │   │               └── page.tsx      # New visit
-│   │   │   │
-│   │   │   ├── visits/
-│   │   │   │   ├── page.tsx                   # All visits
-│   │   │   │   └── [id]/
-│   │   │   │       ├── page.tsx              # Visit detail
-│   │   │   │       └── edit/
-│   │   │   │           └── page.tsx         # Edit visit
-│   │   │   │
-│   │   │   ├── prescriptions/
-│   │   │   │   ├── page.tsx                   # All prescriptions
-│   │   │   │   └── [id]/
-│   │   │   │       └── page.tsx              # Prescription detail
-│   │   │   │
-│   │   │   ├── billing/
-│   │   │   │   ├── page.tsx                   # Billing dashboard
-│   │   │   │   ├── invoices/
-│   │   │   │   │   ├── page.tsx              # All invoices
-│   │   │   │   │   ├── new/
-│   │   │   │   │   │   └── page.tsx         # New invoice
-│   │   │   │   │   └── [id]/
-│   │   │   │   │       └── page.tsx         # Invoice detail
-│   │   │   │   └── payments/
-│   │   │   │       └── page.tsx              # Payment history
-│   │   │   │
-│   │   │   ├── reports/
-│   │   │   │   ├── page.tsx                   # Reports menu
-│   │   │   │   ├── clinical/
-│   │   │   │   │   └── page.tsx              # Clinical reports
-│   │   │   │   ├── financial/
-│   │   │   │   │   └── page.tsx              # Financial reports
-│   │   │   │   └── administrative/
-│   │   │   │       └── page.tsx              # Admin reports
-│   │   │   │
-│   │   │   ├── settings/
-│   │   │   │   ├── page.tsx                   # Settings home
-│   │   │   │   ├── profile/
-│   │   │   │   │   └── page.tsx              # User profile
-│   │   │   │   ├── users/                     # Admin only
-│   │   │   │   │   ├── page.tsx              # User management
-│   │   │   │   │   └── [id]/
-│   │   │   │   │       └── page.tsx         # Edit user
-│   │   │   │   ├── audit-logs/               # Admin only
+│   │   ├── [language]/          # Language-based routing
+│   │   │   ├── (core)/          # Core application routes
+│   │   │   │   ├── dashboard/
+│   │   │   │   │   ├── dashboard-content.tsx
 │   │   │   │   │   └── page.tsx
-│   │   │   │   └── backup/                    # Admin only
-│   │   │   │       └── page.tsx
+│   │   │   │   ├── patients/
+│   │   │   │   │   ├── patients-context.tsx
+│   │   │   │   │   ├── patients-types.ts
+│   │   │   │   │   ├── patients-constants.ts
+│   │   │   │   │   ├── patients-content.tsx
+│   │   │   │   │   ├── components/
+│   │   │   │   │   │   ├── patient-card.tsx
+│   │   │   │   │   │   ├── patient-search.tsx
+│   │   │   │   │   │   ├── patient-list.tsx
+│   │   │   │   │   │   ├── patient-header.tsx
+│   │   │   │   │   │   ├── patient-history.tsx
+│   │   │   │   │   │   └── patient-stats.tsx
+│   │   │   │   │   ├── hooks/
+│   │   │   │   │   │   ├── use-patient.ts
+│   │   │   │   │   │   └── use-patient-list.ts
+│   │   │   │   │   ├── new/
+│   │   │   │   │   │   ├── component/
+│   │   │   │   │   │   ├── new-patient-content.tsx
+│   │   │   │   │   │   └── page.tsx
+│   │   │   │   │   └── [id]/
+│   │   │   │   │       ├── component/
+│   │   │   │   │       ├── patient-detail-content.tsx
+│   │   │   │   │       ├── page.tsx
+│   │   │   │   │       ├── edit/
+│   │   │   │   │       │   ├── component/
+│   │   │   │   │       │   ├── edit-patient-content.tsx
+│   │   │   │   │       │   └── page.tsx
+│   │   │   │   │       └── visits/
+│   │   │   │   │           └── new/
+│   │   │   │   │               ├── component/
+│   │   │   │   │               ├── new-visit-content.tsx
+│   │   │   │   │               └── page.tsx
+│   │   │   │   ├── visits/
+│   │   │   │   │   ├── visits-context.tsx
+│   │   │   │   │   ├── visits-types.ts
+│   │   │   │   │   ├── visits-constants.ts
+│   │   │   │   │   ├── visits-content.tsx
+│   │   │   │   │   ├── components/
+│   │   │   │   │   │   ├── visit-card.tsx
+│   │   │   │   │   │   ├── visit-list.tsx
+│   │   │   │   │   │   ├── visit-timeline.tsx
+│   │   │   │   │   │   ├── vital-signs-display.tsx
+│   │   │   │   │   │   └── soap-note-viewer.tsx
+│   │   │   │   │   ├── hooks/
+│   │   │   │   │   │   ├── use-visit.ts
+│   │   │   │   │   │   └── use-visit-list.ts
+│   │   │   │   │   └── [id]/
+│   │   │   │   │       ├── component/
+│   │   │   │   │       ├── visit-detail-content.tsx
+│   │   │   │   │       ├── page.tsx
+│   │   │   │   │       └── edit/
+│   │   │   │   │           ├── component/
+│   │   │   │   │           ├── edit-visit-content.tsx
+│   │   │   │   │           └── page.tsx
+│   │   │   │   ├── prescriptions/
+│   │   │   │   │   ├── prescriptions-context.tsx
+│   │   │   │   │   ├── prescriptions-types.ts
+│   │   │   │   │   ├── prescriptions-constants.ts
+│   │   │   │   │   ├── prescriptions-content.tsx
+│   │   │   │   │   ├── components/
+│   │   │   │   │   │   ├── prescription-card.tsx
+│   │   │   │   │   │   ├── prescription-list.tsx
+│   │   │   │   │   │   ├── medication-search.tsx
+│   │   │   │   │   │   └── drug-interaction-alert.tsx
+│   │   │   │   │   ├── hooks/
+│   │   │   │   │   │   ├── use-prescription.ts
+│   │   │   │   │   │   └── use-prescription-list.ts
+│   │   │   │   │   └── [id]/
+│   │   │   │   │       ├── component/
+│   │   │   │   │       ├── prescription-detail-content.tsx
+│   │   │   │   │       └── page.tsx
+│   │   │   │   ├── billing/
+│   │   │   │   │   ├── billing-context.tsx
+│   │   │   │   │   ├── billing-types.ts
+│   │   │   │   │   ├── billing-constants.ts
+│   │   │   │   │   ├── billing-content.tsx
+│   │   │   │   │   ├── components/
+│   │   │   │   │   │   ├── invoice-card.tsx
+│   │   │   │   │   │   ├── invoice-list.tsx
+│   │   │   │   │   │   ├── payment-form.tsx
+│   │   │   │   │   │   └── receipt-viewer.tsx
+│   │   │   │   │   ├── hooks/
+│   │   │   │   │   │   ├── use-billing.ts
+│   │   │   │   │   │   └── use-invoice.ts
+│   │   │   │   │   ├── invoices/
+│   │   │   │   │   │   ├── components/
+│   │   │   │   │   │   ├── invoices-content.tsx
+│   │   │   │   │   │   ├── hooks/
+│   │   │   │   │   │   ├── page.tsx
+│   │   │   │   │   │   ├── new/
+│   │   │   │   │   │   │   ├── component/
+│   │   │   │   │   │   │   ├── new-invoice-content.tsx
+│   │   │   │   │   │   │   └── page.tsx
+│   │   │   │   │   │   └── [id]/
+│   │   │   │   │   │       ├── component/
+│   │   │   │   │   │       ├── invoice-detail-content.tsx
+│   │   │   │   │   │       └── page.tsx
+│   │   │   │   │   └── payments/
+│   │   │   │   │       ├── components/
+│   │   │   │   │       ├── payments-content.tsx
+│   │   │   │   │       ├── hooks/
+│   │   │   │   │       └── page.tsx
+│   │   │   │   ├── reports/
+│   │   │   │   │   ├── reports-context.tsx
+│   │   │   │   │   ├── reports-types.ts
+│   │   │   │   │   ├── reports-constants.ts
+│   │   │   │   │   ├── components/
+│   │   │   │   │   │   ├── report-generator.tsx
+│   │   │   │   │   │   ├── report-viewer.tsx
+│   │   │   │   │   │   ├── chart-component.tsx
+│   │   │   │   │   │   └── export-options.tsx
+│   │   │   │   │   ├── hooks/
+│   │   │   │   │   ├── page.tsx
+│   │   │   │   │   ├── clinical/
+│   │   │   │   │   │   ├── components/
+│   │   │   │   │   │   ├── clinical-reports-content.tsx
+│   │   │   │   │   │   ├── hooks/
+│   │   │   │   │   │   └── page.tsx
+│   │   │   │   │   ├── financial/
+│   │   │   │   │   │   ├── components/
+│   │   │   │   │   │   ├── financial-reports-content.tsx
+│   │   │   │   │   │   ├── hooks/
+│   │   │   │   │   │   └── page.tsx
+│   │   │   │   │   └── administrative/
+│   │   │   │   │       ├── components/
+│   │   │   │   │       ├── administrative-reports-content.tsx
+│   │   │   │   │       ├── hooks/
+│   │   │   │   │       └── page.tsx
+│   │   │   │   ├── components/              # Core shared components
+│   │   │   │   │   ├── core-date-box.tsx
+│   │   │   │   │   ├── core-date-range-box.tsx
+│   │   │   │   │   ├── core-number-box.tsx
+│   │   │   │   │   ├── core-text-box.tsx
+│   │   │   │   │   ├── use-core-currency-options.tsx
+│   │   │   │   │   ├── use-core-date-options.tsx
+│   │   │   │   │   ├── use-core-text-options.tsx
+│   │   │   │   │   └── use-core-unit-options.tsx
+│   │   │   │   ├── sign-in/
+│   │   │   │   │   ├── component/
+│   │   │   │   │   ├── page.tsx
+│   │   │   │   │   └── sign-in-content.tsx
+│   │   │   │   ├── forgot-password/
+│   │   │   │   │   ├── component/
+│   │   │   │   │   ├── forgot-password-content.tsx
+│   │   │   │   │   ├── page.tsx
+│   │   │   │   │   └── sent/
+│   │   │   │   ├── reset-password/
+│   │   │   │   │   ├── component/
+│   │   │   │   │   ├── reset-password-content.tsx
+│   │   │   │   │   └── page.tsx
+│   │   │   │   ├── password-change/
+│   │   │   │   │   ├── component/
+│   │   │   │   │   ├── page.tsx
+│   │   │   │   │   └── password-change-content.tsx
+│   │   │   │   ├── notification/
+│   │   │   │   │   └── [...path]/
+│   │   │   │   ├── notifications/
+│   │   │   │   │   └── page.tsx
+│   │   │   │   └── client-wrapper.tsx
 │   │   │   │
-│   │   │   └── layout.tsx      # Dashboard layout with sidebar
+│   │   │   ├── (masters)/         # Master data management routes
+│   │   │   │   ├── settings/
+│   │   │   │   │   ├── settings-context.tsx
+│   │   │   │   │   ├── settings-types.ts
+│   │   │   │   │   ├── settings-constants.ts
+│   │   │   │   │   ├── components/
+│   │   │   │   │   ├── hooks/
+│   │   │   │   │   ├── page.tsx
+│   │   │   │   │   ├── profile/
+│   │   │   │   │   │   ├── components/
+│   │   │   │   │   │   ├── profile-content.tsx
+│   │   │   │   │   │   ├── hooks/
+│   │   │   │   │   │   └── page.tsx
+│   │   │   │   │   ├── users/                # Admin only
+│   │   │   │   │   │   ├── components/
+│   │   │   │   │   │   ├── constants.ts
+│   │   │   │   │   │   ├── context.tsx
+│   │   │   │   │   │   ├── hooks/
+│   │   │   │   │   │   ├── page.tsx
+│   │   │   │   │   │   ├── types.ts
+│   │   │   │   │   │   └── [id]/
+│   │   │   │   │   │       ├── component/
+│   │   │   │   │   │       ├── edit-user-content.tsx
+│   │   │   │   │   │       └── page.tsx
+│   │   │   │   │   ├── audit-logs/          # Admin only
+│   │   │   │   │   │   ├── components/
+│   │   │   │   │   │   ├── audit-logs-content.tsx
+│   │   │   │   │   │   ├── hooks/
+│   │   │   │   │   │   └── page.tsx
+│   │   │   │   │   └── backup/              # Admin only
+│   │   │   │   │       ├── components/
+│   │   │   │   │       ├── backup-content.tsx
+│   │   │   │   │       ├── hooks/
+│   │   │   │   │       └── page.tsx
+│   │   │   │   └── user-access/
+│   │   │   │       ├── components/
+│   │   │   │       ├── constants.ts
+│   │   │   │       ├── context.tsx
+│   │   │   │       ├── hooks/
+│   │   │   │       ├── page.tsx
+│   │   │   │       └── types.ts
+│   │   │   │
+│   │   │   ├── dashboard-content.tsx
+│   │   │   ├── home-content.tsx
+│   │   │   ├── layout.tsx
+│   │   │   ├── page.tsx
+│   │   │   ├── protected/
+│   │   │   │   ├── page.tsx
+│   │   │   │   └── protected-content.tsx
+│   │   │   └── client-wrapper.tsx
 │   │   │
 │   │   ├── api/                # Next.js API routes (BFF layer)
 │   │   │   ├── auth/
@@ -162,16 +302,44 @@ apps/frontend/
 │   │   │   │   │   └── route.ts
 │   │   │   │   ├── logout/
 │   │   │   │   │   └── route.ts
-│   │   │   │   └── refresh/
+│   │   │   │   ├── refresh/
+│   │   │   │   │   └── route.ts
+│   │   │   │   └── register/
 │   │   │   │       └── route.ts
+│   │   │   ├── patients/
+│   │   │   │   ├── route.ts
+│   │   │   │   └── [id]/
+│   │   │   │       └── route.ts
+│   │   │   ├── visits/
+│   │   │   │   ├── route.ts
+│   │   │   │   └── [id]/
+│   │   │   │       └── route.ts
+│   │   │   ├── prescriptions/
+│   │   │   │   ├── route.ts
+│   │   │   │   └── [id]/
+│   │   │   │       └── route.ts
+│   │   │   ├── billing/
+│   │   │   │   ├── route.ts
+│   │   │   │   └── invoices/
+│   │   │   │       ├── route.ts
+│   │   │   │       └── [id]/
+│   │   │   │           └── route.ts
 │   │   │   └── health/
 │   │   │       └── route.ts
 │   │   │
+│   │   ├── dx-globals.scss
+│   │   ├── globals.css
+│   │   ├── favicon.ico
+│   │   ├── layout.tsx          # Root layout
 │   │   ├── not-found.tsx       # 404 page
 │   │   ├── error.tsx           # Error boundary
 │   │   ├── loading.tsx         # Global loading
-│   │   ├── layout.tsx          # Root layout
-│   │   └── page.tsx            # Home page (redirects to dashboard)
+│   │   └── theme/
+│   │       ├── dx.material.compact-black.css
+│   │       └── icons/
+│   │           ├── dxiconsmaterial.ttf
+│   │           ├── dxiconsmaterial.woff
+│   │           └── dxiconsmaterial.woff2
 │   │
 │   ├── components/             # React components
 │   │   ├── ui/                # shadcn/ui components
@@ -206,46 +374,6 @@ apps/frontend/
 │   │   │   ├── auth-layout.tsx
 │   │   │   └── footer.tsx
 │   │   │
-│   │   ├── features/          # Feature-specific components
-│   │   │   ├── patients/
-│   │   │   │   ├── patient-card.tsx
-│   │   │   │   ├── patient-search.tsx
-│   │   │   │   ├── patient-list.tsx
-│   │   │   │   ├── patient-header.tsx
-│   │   │   │   ├── patient-history.tsx
-│   │   │   │   └── patient-stats.tsx
-│   │   │   │
-│   │   │   ├── visits/
-│   │   │   │   ├── visit-card.tsx
-│   │   │   │   ├── visit-list.tsx
-│   │   │   │   ├── visit-timeline.tsx
-│   │   │   │   ├── vital-signs-display.tsx
-│   │   │   │   └── soap-note-viewer.tsx
-│   │   │   │
-│   │   │   ├── prescriptions/
-│   │   │   │   ├── prescription-card.tsx
-│   │   │   │   ├── prescription-list.tsx
-│   │   │   │   ├── medication-search.tsx
-│   │   │   │   └── drug-interaction-alert.tsx
-│   │   │   │
-│   │   │   ├── billing/
-│   │   │   │   ├── invoice-card.tsx
-│   │   │   │   ├── invoice-list.tsx
-│   │   │   │   ├── payment-form.tsx
-│   │   │   │   └── receipt-viewer.tsx
-│   │   │   │
-│   │   │   ├── reports/
-│   │   │   │   ├── report-generator.tsx
-│   │   │   │   ├── report-viewer.tsx
-│   │   │   │   ├── chart-component.tsx
-│   │   │   │   └── export-options.tsx
-│   │   │   │
-│   │   │   └── auth/
-│   │   │       ├── login-form.tsx
-│   │   │       ├── register-form.tsx
-│   │   │       ├── forgot-password-form.tsx
-│   │   │       └── reset-password-form.tsx
-│   │   │
 │   │   └── common/            # Shared common components
 │   │       ├── loading-spinner.tsx
 │   │       ├── error-message.tsx
@@ -267,10 +395,6 @@ apps/frontend/
 │   │
 │   ├── hooks/                # Custom React hooks
 │   │   ├── use-auth.ts
-│   │   ├── use-patient.ts
-│   │   ├── use-visit.ts
-│   │   ├── use-prescription.ts
-│   │   ├── use-billing.ts
 │   │   ├── use-toast.ts
 │   │   ├── use-debounce.ts
 │   │   ├── use-local-storage.ts
@@ -279,17 +403,12 @@ apps/frontend/
 │   ├── store/                # State management (Zustand)
 │   │   ├── auth-store.ts
 │   │   ├── ui-store.ts
-│   │   ├── patient-store.ts
 │   │   └── notification-store.ts
 │   │
-│   ├── types/                # Frontend-specific types
-│   │   ├── index.ts
-│   │   ├── api.types.ts
-│   │   └── ui.types.ts
-│   │
-│   └── styles/               # Global styles
-│       ├── globals.css       # Tailwind imports and global styles
-│       └── themes.css        # Theme variables
+│   └── types/                # Frontend-specific types
+│       ├── index.ts
+│       ├── api.types.ts
+│       └── ui.types.ts
 │
 ├── .env.local                # Local environment variables (gitignored)
 ├── .env.example              # Example environment variables
@@ -306,33 +425,87 @@ apps/frontend/
 
 ### Key Frontend Patterns
 
-#### 1. Route Grouping
-Routes are grouped using parentheses for shared layouts:
-- `(auth)`: Authentication pages without sidebar
-- `(dashboard)`: Main application pages with sidebar
+#### 1. Language-Based Routing
+All routes are nested under `[language]` for internationalization support:
+- Routes: `/en/patients`, `/es/patients`, etc.
+- Default language can be handled via middleware or redirect
 
-#### 2. Server vs Client Components
+#### 2. Route Grouping
+Routes are grouped using parentheses for shared layouts:
+- `(core)`: Core application routes (patients, visits, prescriptions, billing, reports)
+- `(masters)`: Master data management routes (settings, users, audit logs)
+
+#### 3. Feature Organization Pattern
+Each feature follows a consistent structure:
+```
+feature-name/
+├── feature-name-context.tsx      # React Context for state
+├── feature-name-types.ts         # TypeScript types
+├── feature-name-constants.ts     # Constants and enums
+├── feature-name-content.tsx      # Main content component
+├── components/                   # Feature-specific components
+│   └── ...
+├── hooks/                        # Feature-specific hooks
+│   └── ...
+├── page.tsx                      # Next.js page (server component)
+└── [sub-routes]/                 # Nested routes
+```
+
+#### 4. Content Component Pattern
+Pages use a separation between `page.tsx` (server component) and `*-content.tsx` (client component):
 ```typescript
-// Server Component (default) - for data fetching
-// app/(dashboard)/patients/[id]/page.tsx
+// app/[language]/(core)/patients/[id]/page.tsx (Server Component)
 import { getPatient } from '@/lib/api-client'
+import { PatientDetailContent } from './component/patient-detail-content'
 
 export default async function PatientPage({ params }: { params: { id: string } }) {
   const patient = await getPatient(params.id)
-  return <PatientDetail patient={patient} />
+  return <PatientDetailContent patient={patient} />
 }
 
-// Client Component - for interactivity
-// components/features/patients/patient-search.tsx
+// app/[language]/(core)/patients/[id]/component/patient-detail-content.tsx (Client Component)
 'use client'
 
-import { useState } from 'react'
+import { PatientContext } from '../patients-context'
+import { PatientHeader } from '../components/patient-header'
 
-export function PatientSearch() {
-  const [search, setSearch] = useState('')
-  // ... interactive logic
+export function PatientDetailContent({ patient }: { patient: Patient }) {
+  return (
+    <PatientContext.Provider value={{ patient }}>
+      <PatientHeader />
+      {/* ... */}
+    </PatientContext.Provider>
+  )
 }
 ```
+
+#### 5. Context and State Management
+Features use React Context for local state, Zustand for global state:
+```typescript
+// app/[language]/(core)/patients/patients-context.tsx
+'use client'
+
+import { createContext, useContext } from 'react'
+import { Patient } from '@/types'
+
+interface PatientsContextType {
+  patients: Patient[]
+  selectedPatient: Patient | null
+  // ...
+}
+
+export const PatientsContext = createContext<PatientsContextType | null>(null)
+
+export function usePatientsContext() {
+  const context = useContext(PatientsContext)
+  if (!context) throw new Error('usePatientsContext must be used within PatientsProvider')
+  return context
+}
+```
+
+#### 6. Server vs Client Components
+- **Server Components** (`page.tsx`): Data fetching, SEO, initial render
+- **Client Components** (`*-content.tsx`, `components/`): Interactivity, hooks, state
 
 #### 3. API Integration Pattern
 ```typescript

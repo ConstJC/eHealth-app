@@ -7,31 +7,38 @@ const BACKEND_API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:408
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
-    const { refreshToken } = body;
+    // Get cookies from the incoming request
+    const cookies = request.cookies;
+    const cookieHeader = cookies.toString();
     
-    if (!refreshToken) {
-      return NextResponse.json(
-        { message: 'Refresh token is required' },
-        { status: 400 }
-      );
-    }
-    
-    // Call backend API directly
+    // Call backend API with cookies (refresh token is in httpOnly cookie)
     const response = await axios.post<AuthTokens>(
       `${BACKEND_API_URL}/auth/refresh`,
-      { refreshToken },
+      {}, // Empty body - refresh token comes from cookie
       {
         headers: {
           'Content-Type': 'application/json',
+          Cookie: cookieHeader, // Forward cookies to backend
         },
+        withCredentials: true, // Send and receive cookies
       }
     );
     
-    return NextResponse.json(response.data, { status: 200 });
-  } catch (error: any) {
-    const status = error.response?.status || 500;
-    const message = error.response?.data?.message || 'Token refresh failed';
+    // Create Next.js response with data
+    const nextResponse = NextResponse.json(response.data, { status: 200 });
+    
+    // Forward Set-Cookie header from backend to frontend (for updated refresh token)
+    const setCookieHeader = response.headers['set-cookie'];
+    if (setCookieHeader) {
+      setCookieHeader.forEach((cookie) => {
+        nextResponse.headers.append('Set-Cookie', cookie);
+      });
+    }
+    
+    return nextResponse;
+  } catch (error: unknown) {
+    const status = (error as { response?: { status?: number } }).response?.status || 500;
+    const message = (error as { response?: { data?: { message?: string } } }).response?.data?.message || 'Token refresh failed';
     
     return NextResponse.json(
       { message },

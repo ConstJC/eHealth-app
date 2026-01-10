@@ -1,13 +1,19 @@
 import { NestFactory } from '@nestjs/core';
-import { ValidationPipe, VersioningType, ClassSerializerInterceptor } from '@nestjs/common';
+import {
+  ValidationPipe,
+  VersioningType,
+  ClassSerializerInterceptor,
+} from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
 import { Reflector } from '@nestjs/core';
 import helmet from 'helmet';
 import { useContainer } from 'class-validator';
 import * as bodyParser from 'body-parser';
+import cookieParser from 'cookie-parser';
 import { AppModule } from './app.module';
 import { AllExceptionsFilter } from './common/filters/http-exception.filter';
+import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, { cors: true });
@@ -27,14 +33,46 @@ async function bootstrap() {
     defaultVersion: '1',
   });
 
-  // Security middleware
-  app.use(helmet());
-  
-  // CORS configuration
+  // Cookie parser middleware (must be before CORS)
+  app.use(cookieParser());
+
+  // CORS configuration (must be before helmet to avoid conflicts)
+  const frontendUrl = configService.get<string>('app.url');
+  const port = configService.get<number>('port') || 4081;
+  const apiUrl = configService.get<string>('app.backendUrl');
+
   app.enableCors({
-    origin: configService.get<string>('app.url'),
+    origin: (origin, callback) => {
+      // Allow requests with no origin (like mobile apps, curl requests, or Swagger UI)
+      if (!origin) return callback(null, true);
+
+      // Allow requests from frontend URL and Swagger UI (same origin as API)
+      const allowedOrigins = [
+        frontendUrl,
+        apiUrl, // Allow Swagger UI from same origin
+      ];
+
+      if (allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
     credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'Cookie'],
+    exposedHeaders: ['Set-Cookie'],
+    preflightContinue: false,
+    optionsSuccessStatus: 204,
   });
+
+  // Security middleware (after CORS)
+  app.use(
+    helmet({
+      crossOriginResourcePolicy: { policy: 'cross-origin' },
+      crossOriginEmbedderPolicy: false,
+    }),
+  );
 
   // Body parser configuration for handling large payloads
   app.use(bodyParser.json({ limit: '50mb' }));
@@ -59,6 +97,7 @@ async function bootstrap() {
 
   // Global interceptors
   app.useGlobalInterceptors(
+    new LoggingInterceptor(), // Log all requests and responses
     new ClassSerializerInterceptor(app.get(Reflector)),
   );
 
@@ -68,7 +107,9 @@ async function bootstrap() {
   // Swagger configuration
   const config = new DocumentBuilder()
     .setTitle('NestJS Auth API')
-    .setDescription('A comprehensive authentication and authorization API with JWT, RBAC, and email verification')
+    .setDescription(
+      'A comprehensive authentication and authorization API with JWT, RBAC, and email verification',
+    )
     .setVersion('1.0')
     .addBearerAuth(
       {
@@ -92,9 +133,10 @@ async function bootstrap() {
     },
   });
 
-  const port = configService.get<number>('port') || 4081;
   await app.listen(port);
-  
+  console.log('frontendUrl', frontendUrl);
+  console.log('port', port);
+  console.log('apiUrl', apiUrl);
   console.log(`🚀 Application is running on: http://localhost:${port}`);
   console.log(`📚 Swagger documentation: http://localhost:${port}/docs`);
   console.log(`🔗 API Base URL: http://localhost:${port}/api/v1`);

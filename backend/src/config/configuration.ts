@@ -10,7 +10,8 @@ export default () => ({
     refreshExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '7d',
   },
   app: {
-    url: process.env.FRONTEND_URL || 'http://localhost:8000',
+    url: process.env.FRONTEND_URL || 'http://localhost:3000',
+    backendUrl: process.env.BACKEND_URL || 'http://localhost:4081',
     nodeEnv: process.env.NODE_ENV || 'development',
   },
   smtp: {

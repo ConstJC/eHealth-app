@@ -10,9 +10,14 @@ interface EmptyStateProps {
     label: string;
     onClick: () => void;
   };
+  actionLabel?: string;
+  onAction?: () => void;
 }
 
-export function EmptyState({ icon, title, description, action }: EmptyStateProps) {
+export function EmptyState({ icon, title, description, action, actionLabel, onAction }: EmptyStateProps) {
+  const handleAction = action?.onClick || onAction;
+  const label = action?.label || actionLabel;
+
   return (
     <Card>
       <CardContent className="flex flex-col items-center justify-center py-12 px-4">
@@ -23,8 +28,8 @@ export function EmptyState({ icon, title, description, action }: EmptyStateProps
             {description}
           </p>
         )}
-        {action && (
-          <Button onClick={action.onClick}>{action.label}</Button>
+        {handleAction && label && (
+          <Button onClick={handleAction}>{label}</Button>
         )}
       </CardContent>
     </Card>

@@ -19,21 +19,31 @@ export default function PatientsPage() {
   const debouncedSearch = useDebounce(searchTerm, 300);
 
   useEffect(() => {
-    loadPatients();
-  }, [debouncedSearch]);
+    let cancelled = false;
+    
+    const loadPatients = async () => {
+      try {
+        const response = await getPatients({
+          search: debouncedSearch || undefined,
+          page: 1,
+          limit: 50,
+        });
+        if (!cancelled) {
+          setPatients(response.data);
+        }
+      } catch (err) {
+        if (!cancelled) {
+          console.error('Failed to load patients:', err);
+        }
+      }
+    };
 
-  const loadPatients = async () => {
-    try {
-      const response = await getPatients({
-        search: debouncedSearch || undefined,
-        page: 1,
-        limit: 50,
-      });
-      setPatients(response.data);
-    } catch (err) {
-      console.error('Failed to load patients:', err);
-    }
-  };
+    loadPatients();
+    
+    return () => {
+      cancelled = true;
+    };
+  }, [debouncedSearch, getPatients]);
 
   return (
     <div className="space-y-6">

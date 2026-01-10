@@ -7,9 +7,15 @@ const BACKEND_API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:408
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
+    const statusParam = searchParams.get('status');
     const params: PatientSearchParams = {
       search: searchParams.get('search') || undefined,
-      status: searchParams.get('status') as any,
+      name: searchParams.get('name') || undefined,
+      patientId: searchParams.get('patientId') || undefined,
+      dateOfBirth: searchParams.get('dateOfBirth') || undefined,
+      status: statusParam ? (statusParam as PatientSearchParams['status']) : undefined,
+      phone: searchParams.get('phone') || undefined,
+      email: searchParams.get('email') || undefined,
       page: searchParams.get('page') ? parseInt(searchParams.get('page')!) : undefined,
       limit: searchParams.get('limit') ? parseInt(searchParams.get('limit')!) : undefined,
     };
@@ -29,9 +35,9 @@ export async function GET(request: NextRequest) {
     );
 
     return NextResponse.json(response.data, { status: 200 });
-  } catch (error: any) {
-    const status = error.response?.status || 500;
-    const message = error.response?.data?.message || 'Failed to fetch patients';
+  } catch (error: unknown) {
+    const status = (error as { response?: { status?: number } }).response?.status || 500;
+    const message = (error as { response?: { data?: { message?: string } } }).response?.data?.message || 'Failed to fetch patients';
 
     return NextResponse.json({ message }, { status });
   }
@@ -54,9 +60,9 @@ export async function POST(request: NextRequest) {
     );
 
     return NextResponse.json(response.data, { status: 201 });
-  } catch (error: any) {
-    const status = error.response?.status || 500;
-    const message = error.response?.data?.message || 'Failed to create patient';
+  } catch (error: unknown) {
+    const status = (error as { response?: { status?: number } }).response?.status || 500;
+    const message = (error as { response?: { data?: { message?: string } } }).response?.data?.message || 'Failed to create patient';
 
     return NextResponse.json({ message }, { status });
   }

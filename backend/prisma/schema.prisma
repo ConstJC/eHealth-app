@@ -358,3 +358,48 @@ model AuditLog {
   @@index([entityType, entityId])
   @@index([createdAt])
 }
+
+model MenuItem {
+  id          String      @id @default(cuid())
+  label       String      // Display name (e.g., "Dashboard", "Patients")
+  href        String      // Route path (e.g., "/dashboard", "/patients")
+  icon        String?     // Icon identifier (e.g., "LayoutDashboard", "Users")
+  order       Int         @default(0) // Display order (lower = first)
+  isActive    Boolean     @default(true) // Enable/disable menu item
+  parentId    String?     // For nested/submenu items (future enhancement)
+  parent      MenuItem?   @relation("MenuItemHierarchy", fields: [parentId], references: [id], onDelete: SetNull)
+  children    MenuItem[]  @relation("MenuItemHierarchy")
+  
+  // Relations
+  roleMenus   RoleMenu[]
+  
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  deletedAt   DateTime?  // Soft delete
+
+  @@map("menu_items")
+  @@index([order])
+  @@index([isActive])
+  @@index([deletedAt])
+  @@index([parentId])
+}
+
+model RoleMenu {
+  id          String      @id @default(cuid())
+  role        Role        // ADMIN, DOCTOR, NURSE, etc.
+  menuItemId  String
+  menuItem    MenuItem    @relation(fields: [menuItemId], references: [id], onDelete: Cascade)
+  
+  // Optional: Role-specific overrides
+  label       String?     // Override default label for this role
+  order       Int?        // Override default order for this role
+  isVisible   Boolean     @default(true) // Hide menu item for specific role
+  
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  @@unique([role, menuItemId])
+  @@map("role_menus")
+  @@index([role])
+  @@index([menuItemId])
+}

@@ -15,7 +15,7 @@ export default function DashboardPage() {
       color: 'blue',
     },
     {
-      title: 'Today\'s Visits',
+      title: "Today's Visits",
       value: '45',
       change: '+5%',
       icon: FileText,
@@ -41,7 +41,7 @@ export default function DashboardPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-        <p className="text-gray-600 mt-1">Welcome back! Here's what's happening today.</p>
+        <p className="text-gray-600 mt-1">Welcome back! Here&apos;s what&apos;s happening today.</p>
       </div>
 
       {/* Stats Grid */}

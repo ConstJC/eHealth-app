@@ -44,6 +44,26 @@ export class AllExceptionsFilter implements ExceptionFilter {
         ? exception.message
         : 'Internal server error';
 
+    // Log error details for debugging (especially for non-HTTP exceptions)
+    if (!(exception instanceof HttpException)) {
+      console.error('❌ Unhandled Exception:', {
+        path: request.url,
+        method: request.method,
+        error:
+          exception instanceof Error ? exception.message : String(exception),
+        stack: exception instanceof Error ? exception.stack : undefined,
+        exception,
+      });
+    } else {
+      // Log HTTP exceptions at debug level
+      console.error('⚠️ HTTP Exception:', {
+        path: request.url,
+        method: request.method,
+        status,
+        message: exception.message,
+      });
+    }
+
     const errorResponse = {
       statusCode: status,
       timestamp: new Date().toISOString(),

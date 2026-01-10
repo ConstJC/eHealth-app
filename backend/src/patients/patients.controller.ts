@@ -84,7 +84,10 @@ export class PatientsController {
   @Get('patient-id/:patientId')
   @Roles(Role.ADMIN, Role.DOCTOR, Role.NURSE, Role.RECEPTIONIST)
   @ApiOperation({ summary: 'Get patient by patient ID (e.g., P2024-00001)' })
-  @ApiParam({ name: 'patientId', description: 'Patient ID (e.g., P2024-00001)' })
+  @ApiParam({
+    name: 'patientId',
+    description: 'Patient ID (e.g., P2024-00001)',
+  })
   @ApiResponse({
     status: 200,
     description: 'Patient retrieved successfully',

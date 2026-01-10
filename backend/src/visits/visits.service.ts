@@ -2,7 +2,6 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
-  ForbiddenException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateVisitDto, UpdateVisitDto, SearchVisitDto } from './dto';
@@ -185,7 +184,11 @@ export class VisitsService {
   /**
    * Update visit
    */
-  async update(id: string, dto: UpdateVisitDto, userId: string): Promise<Visit> {
+  async update(
+    id: string,
+    dto: UpdateVisitDto,
+    userId: string,
+  ): Promise<Visit> {
     // Check if visit exists
     const existingVisit = await this.findOne(id);
 
@@ -254,7 +257,9 @@ export class VisitsService {
 
     // Validate required fields for completion
     if (!existingVisit.chiefComplaint) {
-      throw new BadRequestException('Chief complaint is required to complete visit');
+      throw new BadRequestException(
+        'Chief complaint is required to complete visit',
+      );
     }
 
     // Update visit status

@@ -159,10 +159,7 @@ export class VisitsController {
   })
   @ApiResponse({ status: 404, description: 'Visit not found' })
   @ApiResponse({ status: 400, description: 'Cannot cancel completed visit' })
-  async cancelVisit(
-    @Param('id') id: string,
-    @Body('reason') reason?: string,
-  ) {
+  async cancelVisit(@Param('id') id: string, @Body('reason') reason?: string) {
     return this.visitsService.cancelVisit(id, reason);
   }
 }

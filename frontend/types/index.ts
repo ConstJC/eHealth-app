@@ -23,7 +23,7 @@ export interface AuthResponse {
   message: string;
   user: User;
   accessToken: string;
-  refreshToken: string;
+  // refreshToken is no longer in response - it's in httpOnly cookie
 }
 
 export interface ApiError {
