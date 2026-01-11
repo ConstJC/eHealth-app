@@ -3,31 +3,20 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/auth-store';
-import { tokenStorage } from '@/lib/auth';
 
 export default function Home() {
   const router = useRouter();
-  const { isAuthenticated, hasHydrated, accessToken, user } = useAuthStore();
-  const language = 'en'; // Default language
+  const { isAuthenticated, hasHydrated } = useAuthStore();
 
   useEffect(() => {
-    // Wait for store to hydrate
-    if (!hasHydrated) {
-      return;
-    }
+    if (!hasHydrated) return;
 
-    // Check authentication state
-    const hasToken = accessToken || tokenStorage.getAccessToken();
-    const hasUser = user || tokenStorage.getUser();
-    const authenticated = isAuthenticated || (hasToken && hasUser);
-
-    if (authenticated) {
-      router.replace(`/${language}/dashboard`);
+    if (isAuthenticated) {
+      router.replace('/dashboard');
     } else {
-      router.replace(`/${language}/sign-in`);
+      router.replace('/login');
     }
-  }, [hasHydrated, isAuthenticated, accessToken, user, router, language]);
+  }, [hasHydrated, isAuthenticated, router]);
 
-  // Show nothing while redirecting
   return null;
 }

@@ -17,12 +17,18 @@ export default function NotFound() {
           The page you are looking for doesn't exist or has been moved.
         </p>
         <div className="flex gap-4 justify-center">
-          <Button asChild className="bg-blue-600 hover:bg-blue-700 text-white">
-            <Link href="/en/dashboard">Go to Dashboard</Link>
-          </Button>
-          <Button asChild variant="outline">
-            <Link href="/en/sign-in">Sign In</Link>
-          </Button>
+          <Link 
+            href="/dashboard"
+            className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 h-10 px-4 py-2 bg-blue-600 text-white hover:bg-blue-700"
+          >
+            Go to Dashboard
+          </Link>
+          <Link 
+            href="/login"
+            className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 h-10 px-4 py-2 border border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+          >
+            Sign In
+          </Link>
         </div>
       </div>
     </div>

@@ -1,6 +1,6 @@
 // API Base URL - defaults to backend on port 4081 with v1 prefix
 // Validate environment variable if in production
-let apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4081/api/v1';
+export const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4081/api/v1';
 
 if (process.env.NODE_ENV === 'production' && !process.env.NEXT_PUBLIC_API_URL) {
   console.warn('NEXT_PUBLIC_API_URL is not set in production. Using default localhost URL.');

@@ -15,6 +15,8 @@ import { AuditModule } from './audit/audit.module';
 import { ReportsModule } from './reports/reports.module';
 import { FilesModule } from './files/files.module';
 import { MenuItemsModule } from './menu-items/menu-items.module';
+import { CertificatesModule } from './certificates/certificates.module';
+import { AppointmentsModule } from './appointments/appointments.module';
 import configuration from './config/configuration';
 
 @Module({
@@ -41,6 +43,8 @@ import configuration from './config/configuration';
     ReportsModule,
     FilesModule,
     MenuItemsModule,
+    CertificatesModule,
+    AppointmentsModule,
   ],
   controllers: [AppController],
   providers: [AppService, PrismaService],

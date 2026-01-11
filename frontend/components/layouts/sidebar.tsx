@@ -1,31 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
-import { useParams } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import {
-  Menu,
-  X,
-  Activity,
-  ChevronDown,
-  ChevronRight,
-  Settings,
-  Loader2,
-} from 'lucide-react';
 import { Button } from '@/components/ui/button';
-
-
-import { useMenuItems } from '@/hooks/use-menu-items';
-import { getMenuIcon } from '@/lib/menu-icon-map';
-import type { MenuItem } from '@/app/api/menu-items/route';
-import {
-  DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuItem,
-} from '@/components/ui/dropdown-menu';
+import { MENU_ITEMS, SETTINGS_ITEM } from '@/config/menu';
+import { Activity, ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface SidebarProps {
   open: boolean;
@@ -34,282 +15,76 @@ interface SidebarProps {
 
 export function Sidebar({ open, onToggle }: SidebarProps) {
   const pathname = usePathname();
-  const router = useRouter();
-  const params = useParams();
-
-  const { topLevelItems, settingsMenu, isLoading, error } = useMenuItems();
-  const [settingsOpen, setSettingsOpen] = useState(false);
-  
-  // Get language from params or pathname
-  const language = (params?.language as string) || pathname?.split('/')[1] || 'en';
-  
-  // Transform menu items to include language prefix in href
-  const transformMenuItem = (item: MenuItem): MenuItem & { href: string } => {
-    // Remove leading slash and language prefix if present
-    const cleanHref = item.href.startsWith('/') ? item.href.slice(1) : item.href;
-    const parts = cleanHref.split('/');
-    const hasLanguagePrefix = parts[0] === 'en' || parts[0] === language;
-    const pathWithoutLanguage = hasLanguagePrefix ? parts.slice(1).join('/') : cleanHref;
-    
-    return {
-      ...item,
-      href: `/${language}/${pathWithoutLanguage}`,
-      children: item.children?.map(transformMenuItem),
-    };
-  };
-
-  // Build navigation with language prefix
-  const navigation = topLevelItems
-    .filter(item => item.href !== '/settings') // Exclude Settings from top-level (it's handled separately)
-    .map(transformMenuItem);
-
-  // Build settings sub-menu with language prefix
-  const settingsSubMenu = settingsMenu?.children
-    ? settingsMenu.children.map(transformMenuItem)
-    : [];
-
-  // Check if we're on a settings page to auto-expand
-  useEffect(() => {
-    if (pathname?.includes('/settings')) {
-      setSettingsOpen(true);
-    }
-  }, [pathname]);
-
-  // Check if any settings sub-menu item is active
-  const isSettingsActive = pathname?.includes('/settings');
 
   return (
-    <>
-      {/* Mobile overlay */}
-      {open && (
-        <div
-          className="fixed inset-0 z-40 bg-black/50 lg:hidden"
-          onClick={onToggle}
-        />
+    <aside
+      className={cn(
+        'glass relative h-full transition-all duration-300 ease-in-out border-r border-slate-200/60 z-20 flex flex-col shadow-xl',
+        open ? 'w-72' : 'w-20'
       )}
-
-      {/* Sidebar */}
-      <aside
-        className={cn(
-          'fixed top-0 left-0 z-50 h-screen bg-white border-r border-gray-200 transition-all duration-300 ease-in-out lg:relative lg:z-auto',
-          open ? 'w-64' : 'w-0 lg:w-16'
-        )}
-      >
-        <div className="flex flex-col h-full overflow-hidden">
-          {/* Header */}
-          <div className={cn(
-            "flex items-center border-b border-gray-200 transition-all shrink-0",
-            open ? "justify-between p-4" : "justify-center p-2"
-          )}>
-            <div className={cn(
-              "flex items-center gap-2",
-              open ? "flex-1" : "justify-center"
-            )}>
-              <div className={cn(
-                "flex items-center justify-center rounded-lg bg-blue-600 text-white shrink-0",
-                open ? "h-10 w-10" : "h-8 w-8"
-              )}>
-                <Activity className={open ? "h-6 w-6" : "h-5 w-5"} />
-              </div>
-              {open && (
-                <h1 className="text-xl font-bold text-blue-600 whitespace-nowrap">Medical Clinic</h1>
-              )}
-            </div>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={onToggle}
-              className="lg:hidden shrink-0"
-            >
-              {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-            </Button>
+    >
+      {/* Brand */}
+      <div className="h-20 flex items-center justify-center border-b border-slate-200/60 shrink-0 bg-white/60 px-4">
+        <div className={cn("flex items-center gap-3 transition-all duration-200", open ? "opacity-100" : "opacity-100")}>
+          <div className="bg-gradient-to-br from-blue-500 to-blue-600 p-3 rounded-2xl text-white shadow-lg ring-2 ring-blue-100">
+            <Activity className="h-7 w-7" />
           </div>
-
-          {/* Navigation */}
-          <nav className={cn(
-            "flex-1 py-4 space-y-1 overflow-y-auto overflow-x-hidden",
-            open ? "px-2" : "px-1"
-          )}>
-            {isLoading ? (
-              <div className="flex items-center justify-center py-8">
-                <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
-              </div>
-            ) : error ? (
-              <div className="px-3 py-2 text-sm text-red-600">
-                Failed to load menu items
-              </div>
-            ) : (
-              <>
-                {navigation.map((item) => {
-                  const Icon = getMenuIcon(item.icon);
-                  // Check if current pathname matches the route (with or without trailing slash)
-                  const isActive = pathname === item.href || pathname?.startsWith(item.href + '/');
-
-                  return (
-                    <Link
-                      key={item.id}
-                      href={item.href}
-                      className={cn(
-                        'flex items-center rounded-lg transition-colors whitespace-nowrap',
-                        open ? 'gap-3 px-3 py-2' : 'justify-center px-2 py-2',
-                        isActive
-                          ? 'bg-blue-50 text-blue-700 font-medium'
-                          : 'text-gray-700 hover:bg-gray-100'
-                      )}
-                      onClick={() => {
-                        // Close mobile sidebar on navigation
-                        if (window.innerWidth < 1024) {
-                          onToggle();
-                        }
-                      }}
-                      title={!open ? item.label : undefined}
-                    >
-                      <Icon className="h-5 w-5 shrink-0" />
-                      {open && <span className="truncate">{item.label}</span>}
-                    </Link>
-                  );
-                })}
-              </>
-            )}
-
-            {/* Settings Collapsible Menu */}
-            {settingsMenu && !isLoading && (
-              <div className="space-y-1">
-                {open ? (
-                  <>
-                    <button
-                      onClick={() => setSettingsOpen(!settingsOpen)}
-                      className={cn(
-                        'flex items-center justify-between w-full rounded-lg transition-colors whitespace-nowrap gap-3 px-3 py-2',
-                        isSettingsActive
-                          ? 'bg-blue-50 text-blue-700 font-medium'
-                          : 'text-gray-700 hover:bg-gray-100'
-                      )}
-                      title={!open ? settingsMenu.label : undefined}
-                    >
-                      <div className="flex items-center gap-3">
-                        {(() => {
-                          const SettingsIcon = getMenuIcon(settingsMenu.icon, Settings);
-                          return <SettingsIcon className="h-5 w-5 shrink-0" />;
-                        })()}
-                        <span className="truncate">{settingsMenu.label}</span>
-                      </div>
-                      {settingsOpen ? (
-                        <ChevronDown className="h-4 w-4 shrink-0" />
-                      ) : (
-                        <ChevronRight className="h-4 w-4 shrink-0" />
-                      )}
-                    </button>
-                    
-                    {/* Settings Sub-menu */}
-                    {settingsOpen && settingsSubMenu.length > 0 && (
-                      <div className="ml-4 space-y-1 border-l-2 border-gray-200 pl-2">
-                        {settingsSubMenu.map((item) => {
-                          const Icon = getMenuIcon(item.icon);
-                          const isActive = pathname === item.href || pathname?.startsWith(item.href + '/');
-
-                          return (
-                            <Link
-                              key={item.id}
-                              href={item.href}
-                              className={cn(
-                                'flex items-center rounded-lg transition-colors whitespace-nowrap gap-3 px-3 py-2',
-                                isActive
-                                  ? 'bg-blue-50 text-blue-700 font-medium'
-                                  : 'text-gray-700 hover:bg-gray-100'
-                              )}
-                              onClick={() => {
-                                // Close mobile sidebar on navigation
-                                if (window.innerWidth < 1024) {
-                                  onToggle();
-                                }
-                              }}
-                            >
-                              <Icon className="h-4 w-4 shrink-0" />
-                              <span className="truncate text-sm">{item.label}</span>
-                            </Link>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </>
-                ) : (
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <button
-                        className={cn(
-                          'flex items-center justify-center rounded-lg transition-all duration-200 whitespace-nowrap px-2 py-2 w-full',
-                          'hover:scale-105 active:scale-95',
-                          isSettingsActive
-                            ? 'bg-blue-50 text-blue-700 font-medium shadow-sm'
-                            : 'text-gray-700 hover:bg-gray-100'
-                        )}
-                        title={settingsMenu.label}
-                      >
-                        {(() => {
-                          const SettingsIcon = getMenuIcon(settingsMenu.icon, Settings);
-                          return <SettingsIcon className="h-5 w-5 shrink-0" />;
-                        })()}
-                      </button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent 
-                      align="start" 
-                      mobileFullScreen={true}
-                      useFixed={true}
-                      className="w-48 p-2"
-                    >
-                      {/* Menu Items */}
-                      <div className="space-y-1 p-1">
-                        {settingsSubMenu.map((item, index) => {
-                          const Icon = getMenuIcon(item.icon);
-                          const isActive = pathname === item.href || pathname?.startsWith(item.href + '/');
-
-                          return (
-                            <DropdownMenuItem
-                              key={item.id}
-                              index={index}
-                              className={cn(
-                                'flex items-center gap-3 cursor-pointer',
-                                'group relative',
-                                isActive && 'bg-blue-50 text-blue-700 font-medium border-l-2 border-blue-600'
-                              )}
-                              onClick={() => {
-                                // Close mobile sidebar on navigation
-                                if (window.innerWidth < 1024) {
-                                  onToggle();
-                                }
-                                // Navigate to the settings page
-                                router.push(item.href);
-                              }}
-                              aria-label={item.label}
-                            >
-                              <Icon 
-                                className={cn(
-                                  "h-4 w-4 shrink-0 transition-colors",
-                                  isActive 
-                                    ? "text-blue-600" 
-                                    : "text-gray-500 group-hover:text-blue-600"
-                                )} 
-                              />
-                              <span className="flex-1 font-medium text-sm">{item.label}</span>
-                              {isActive && (
-                                <div className="h-2 w-2 rounded-full bg-blue-600 shrink-0 animate-pulse" />
-                              )}
-                            </DropdownMenuItem>
-                          );
-                        })}
-                      </div>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                )}
-              </div>
-            )}
-          </nav>
-
-
+          {open && (
+            <div className="flex flex-col">
+              <span className="font-bold text-xl bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent leading-tight">
+                eHealth
+              </span>
+              <span className="text-xs text-slate-500 font-medium">EMR System</span>
+            </div>
+          )}
         </div>
-      </aside>
-    </>
+      </div>
+
+      {/* Navigation */}
+      <nav className="flex-1 py-6 px-4 space-y-2 overflow-y-auto">
+        <p className={cn("text-xs font-bold text-slate-500 uppercase tracking-wider mb-3 px-3", !open && "text-center sr-only")}>
+          Menu
+        </p>
+        
+        {MENU_ITEMS.map((item) => {
+          const isActive = pathname.startsWith(item.href);
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={cn(
+                "flex items-center gap-3.5 py-3.5 rounded-xl transition-all duration-200 group relative",
+                !open ? "justify-center px-2" : "px-4",
+                isActive 
+                  ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-500/25" 
+                  : "text-slate-700 hover:bg-slate-100 hover:text-slate-900 hover:shadow-sm"
+              )}
+            >
+              <item.icon className={cn("h-5 w-5 shrink-0 transition-transform", !open && "mx-auto", isActive && "scale-110")} />
+              
+              {open && (
+                <span className="font-semibold text-sm">{item.label}</span>
+              )}
+            </Link>
+          );
+        })}
+
+        <div className="my-5 border-t border-slate-200/70" />
+
+        <Link
+          href={SETTINGS_ITEM.href}
+          className={cn(
+            "flex items-center gap-3.5 py-3.5 rounded-xl transition-all duration-200 group relative",
+            !open ? "justify-center px-2" : "px-4",
+            pathname.startsWith(SETTINGS_ITEM.href)
+              ? "bg-slate-100 text-slate-900 font-semibold shadow-sm" 
+              : "text-slate-700 hover:bg-slate-100 hover:text-slate-900 hover:shadow-sm"
+          )}
+        >
+          <SETTINGS_ITEM.icon className={cn("h-5 w-5 shrink-0", !open && "mx-auto")} />
+          {open && <span className="font-semibold text-sm">{SETTINGS_ITEM.label}</span>}
+        </Link>
+      </nav>
+    </aside>
   );
 }
-

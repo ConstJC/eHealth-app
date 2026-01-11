@@ -40,18 +40,15 @@ export function RouteGuard({ children }: RouteGuardProps) {
     if (!isAuthenticated && !hasToken && !user) {
       // Check if we're already on an auth page
       const pathname = window.location.pathname;
-      const isAuthPage = pathname.includes('/sign-in') || 
+      const isAuthPage = pathname.includes('/login') || 
                         pathname.includes('/forgot-password') || 
                         pathname.includes('/reset-password') ||
                         pathname.includes('/register');
       
       // Only redirect if not already on an auth page
       if (!isAuthPage) {
-        // Get current language from pathname or use default
-        const languageMatch = pathname.match(/^\/([^/]+)/);
-        const language = languageMatch ? languageMatch[1] : 'en';
-        // Redirect to sign-in with language prefix
-        router.push(`/${language}/sign-in`);
+        // Redirect to login page
+        router.push('/login');
       }
     }
   }, [isAuthenticated, isLoading, hasHydrated, isMounted, router, accessToken, user]);

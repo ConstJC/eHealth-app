@@ -6,16 +6,26 @@ interface AuthLayoutProps {
 
 export function AuthLayout({ children }: AuthLayoutProps) {
   return (
-    <div data-auth-layout className="relative flex min-h-screen items-center justify-center px-4 py-12 sm:px-6 lg:px-8 overflow-hidden bg-gray-50">
-      {/* Gradient background with pastel colors */}
-      <div className="absolute inset-0 bg-gradient-to-br from-blue-50 via-pink-50 to-yellow-50">
-        {/* Abstract organic shapes */}
-        <div className="absolute top-0 left-0 w-96 h-96 bg-blue-200/30 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2"></div>
-        <div className="absolute top-0 right-0 w-96 h-96 bg-pink-200/30 rounded-full blur-3xl translate-x-1/2 -translate-y-1/2"></div>
-        <div className="absolute top-1/2 left-1/2 w-96 h-96 bg-yellow-200/30 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2"></div>
+    <div data-auth-layout className="relative flex min-h-screen items-center justify-center px-4 py-12 sm:px-6 lg:px-8 overflow-hidden bg-white">
+      {/* Premium Medical Background */}
+      <div className="absolute inset-0 z-0">
+        <div 
+          className="absolute inset-0 bg-cover bg-center opacity-40 mix-blend-overlay"
+          style={{ backgroundImage: 'url(\"/medical-bg.png\")' }}
+        />
+        <div className="absolute inset-0 bg-linear-to-br from-blue-50/80 via-white/40 to-indigo-50/80" />
+        
+        {/* Animated Decorative Blobs */}
+        <div className="absolute top-0 -left-4 w-96 h-96 bg-blue-400/20 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute bottom-0 -right-4 w-96 h-96 bg-indigo-400/20 rounded-full blur-3xl animate-pulse delay-700" />
       </div>
-      <div className="relative w-full max-w-md">{children}</div>
+      
+      {/* Content Container */}
+      <div className="relative w-full max-w-md z-10">
+        <div className="animate-in fade-in slide-in-from-bottom-4 duration-1000 ease-out">
+          {children}
+        </div>
+      </div>
     </div>
   );
 }
-

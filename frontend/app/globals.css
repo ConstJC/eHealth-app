@@ -1,32 +1,187 @@
 @import "tailwindcss";
 
 :root {
+  /* Pure White Background - Clean, Professional Healthcare Theme */
   --background: #ffffff;
-  --foreground: #171717;
+  --foreground: #1e293b; /* Slate 800 - Softer than 900 for better readability */
+
+  /* Cards with subtle elevation */
+  --card: #ffffff;
+  --card-foreground: #1e293b;
+
+  --popover: #ffffff;
+  --popover-foreground: #1e293b;
+
+  /* Primary: Professional Blue - Trustworthy, Clean, Medical */
+  --primary: #2563eb; /* Blue 600 */
+  --primary-foreground: #ffffff;
+
+  /* Secondary: Soft Gray with warmth */
+  --secondary: #f8fafc; /* Slate 50 */
+  --secondary-foreground: #1e293b;
+
+  /* Muted: For secondary text and backgrounds */
+  --muted: #f1f5f9; /* Slate 100 */
+  --muted-foreground: #64748b; /* Slate 500 */
+
+  /* Accent: Soft Blue for hover states */
+  --accent: #eff6ff; /* Blue 50 */
+  --accent-foreground: #1d4ed8; /* Blue 700 */
+
+  /* Destructive: Error states */
+  --destructive: #dc2626; /* Red 600 */
+  --destructive-foreground: #ffffff;
+
+  /* Success: For positive actions */
+  --success: #059669; /* Emerald 600 */
+  --success-foreground: #ffffff;
+
+  /* Warning: For cautionary states */
+  --warning: #d97706; /* Amber 600 */
+  --warning-foreground: #ffffff;
+
+  /* Border & Input - Subtle, refined */
+  --border: #e2e8f0; /* Slate 200 */
+  --input: #f1f5f9; /* Slate 100 */
+  --input-border: #cbd5e1; /* Slate 300 */
+  --ring: #2563eb; /* Blue 600 */
+
+  /* Radius - Modern, friendly */
+  --radius: 0.75rem; /* 12px */
+
+  /* Shadows - Layered elevation system */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
+    0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1),
+    0 10px 10px -5px rgba(0, 0, 0, 0.04);
+
+  /* Glassmorphism Variables */
+  --glass-bg: rgba(255, 255, 255, 0.85);
+  --glass-border: rgba(226, 232, 240, 0.6);
+  --glass-shadow: 0 8px 32px 0 rgba(37, 99, 235, 0.08);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-input-border: var(--input-border);
+  --color-ring: var(--ring);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui;
+  --font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular;
+
+  /* Glass Utilities */
+  --backdrop-blur-glass: blur(12px);
+
+  /* Shadow Utilities */
+  --shadow-sm: var(--shadow-sm);
+  --shadow-md: var(--shadow-md);
+  --shadow-lg: var(--shadow-lg);
+  --shadow-xl: var(--shadow-xl);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  cursor: default;
 }
 
-/* Ensure auth pages have light background */
-body:has([data-auth-layout]) {
-  background: #f9fafb;
-  color: #171717;
+/* Global Interactive Cursor States */
+a, 
+button, 
+[role="button"],
+.cursor-pointer {
+  cursor: pointer !important;
+}
+
+/* Glassmorphism Utility */
+@utility glass {
+  background: var(--glass-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+}
+
+@utility glass-card {
+  @apply glass rounded-xl;
+}
+
+/* Card Elevation Utilities */
+.card-elevated {
+  @apply bg-card rounded-xl shadow-md border border-border/50 transition-shadow duration-200;
+}
+
+.card-elevated:hover {
+  @apply shadow-lg;
+}
+
+/* Input Utilities */
+.input-field {
+  @apply bg-input border border-input-border rounded-lg px-4 py-2.5 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-all duration-200;
+}
+
+/* Animation Utilities */
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--muted-foreground);
+  opacity: 0.3;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--muted-foreground);
+  opacity: 0.6;
 }

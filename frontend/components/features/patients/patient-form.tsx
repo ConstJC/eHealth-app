@@ -141,7 +141,7 @@ export function PatientForm({ patient, onSubmit, onCancel, isLoading = false }: 
   };
 
   return (
-    <Form onSubmit={form.handleSubmit(handleSubmit)} errors={form.formState.errors}>
+    <Form onSubmit={form.handleSubmit(handleSubmit)}>
       <div className="space-y-6">
         {/* Basic Information */}
         <Card>

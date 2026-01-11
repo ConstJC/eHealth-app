@@ -16,9 +16,11 @@ This documentation folder contains comprehensive specifications and guidelines f
 ## Documentation Structure
 
 ### 📋 [project-overview.md](./project-overview.md)
+
 **Purpose**: High-level project vision and goals
 
 Contains:
+
 - Vision statement and problem statement
 - Solution overview
 - Target audience
@@ -32,9 +34,11 @@ Contains:
 ---
 
 ### 📝 [requirements.md](./requirements.md)
+
 **Purpose**: Detailed functional and technical requirements
 
 Contains:
+
 - **Functional Requirements:**
   - Patient Management System
   - Consultation and Visit Management
@@ -43,7 +47,6 @@ Contains:
   - User Management and Authentication
   - Reporting and Analytics
   - Audit and Compliance
-  
 - **Technical Requirements:**
   - Performance requirements
   - Security requirements
@@ -58,9 +61,11 @@ Contains:
 ---
 
 ### 🏗️ [project-structure.md](./project-structure.md)
+
 **Purpose**: System architecture and code organization
 
 Contains:
+
 - Complete monorepo structure (for development)
 - Frontend directory layout (Next.js)
 - Backend directory layout (NestJS)
@@ -78,22 +83,27 @@ Contains:
 ---
 
 ### 🛠️ [tech-stack.md](./tech-stack.md)
+
 **Purpose**: Technology choices and justifications
 
 Contains:
+
 - **Frontend Stack:**
+
   - Next.js, React, TypeScript
   - Tailwind CSS, shadcn/ui
   - State management (Zustand, React Query)
   - Forms and validation
 
 - **Backend Stack:**
+
   - NestJS, Node.js
   - PostgreSQL, Prisma
   - Authentication libraries
   - Email services
 
 - **Infrastructure:**
+
   - Docker containerization
   - Deployment options
   - CI/CD pipeline
@@ -107,45 +117,53 @@ Contains:
 ---
 
 ### ✨ [features.md](./features.md)
+
 **Purpose**: Detailed feature specifications
 
 Contains comprehensive descriptions of all features:
 
 1. **User Authentication and Authorization**
+
    - Email/password authentication
    - Role-based access control (Admin, Doctor, Nurse, Receptionist)
    - Password reset flow
    - Session management
 
 2. **Patient Registration and Management**
+
    - Patient information capture
    - Medical history documentation
    - Search and retrieval
    - Profile management
 
 3. **Consultation and Visit Documentation**
+
    - Visit creation workflow
    - Vital signs recording
    - SOAP note documentation
    - Templates and attachments
 
 4. **Prescription Management**
+
    - Medication selection and safety checks
    - Drug interaction warnings
    - Prescription history
    - E-prescribing preparation
 
 5. **Billing and Payment System**
+
    - Invoice generation
    - Multiple payment methods
    - Financial reporting
 
 6. **Reporting and Analytics**
+
    - Clinical reports
    - Administrative reports
    - Export capabilities
 
 7. **Audit Logging and Compliance**
+
    - Activity tracking
    - Compliance features
    - Audit trail
@@ -159,9 +177,11 @@ Contains comprehensive descriptions of all features:
 ---
 
 ### 💻 [implementation.md](./implementation.md)
+
 **Purpose**: Development standards and coding practices
 
 Contains:
+
 - Development philosophy
 - Code organization patterns
 - Frontend implementation examples
@@ -184,15 +204,18 @@ Contains:
 ---
 
 ### 🔄 [user-flow.md](./user-flow.md)
+
 **Purpose**: Complete user journey documentation
 
 Contains detailed workflows for:
 
 - **Initial User Journey:**
+
   - System access and authentication
   - Password reset flow
 
 - **Core Workflows:**
+
   - Patient registration (step-by-step)
   - Patient search
   - Consultation and visit documentation
@@ -202,11 +225,13 @@ Contains detailed workflows for:
   - Patient history review
 
 - **Administrative Workflows:**
+
   - User management
   - Audit log review
   - Data backup
 
 - **Error Handling:**
+
   - Connection loss scenarios
   - Concurrent editing
   - Invalid data entry
@@ -224,23 +249,27 @@ Contains detailed workflows for:
 ## How to Use This Documentation
 
 ### For Project Managers
+
 1. Start with **project-overview.md** for vision and scope
 2. Review **requirements.md** for deliverables
 3. Check **user-flow.md** for user experience expectations
 4. Reference **features.md** for acceptance criteria
 
 ### For Developers
+
 1. Read **tech-stack.md** to understand technology choices
 2. Study **project-structure.md** to set up your environment
 3. Follow **implementation.md** for coding standards
 4. Reference **features.md** and **user-flow.md** while building
 
 ### For Designers/UX
+
 1. Review **user-flow.md** for complete user journeys
 2. Check **features.md** for feature specifications
 3. Reference **requirements.md** for UI/UX constraints
 
 ### For QA/Testers
+
 1. Use **features.md** for test cases
 2. Reference **user-flow.md** for end-to-end scenarios
 3. Check **requirements.md** for validation criteria
@@ -248,6 +277,7 @@ Contains detailed workflows for:
 ## Quick Start for Development
 
 ### Prerequisites
+
 - Node.js 20+
 - Docker & Docker Compose
 - PostgreSQL client (optional, for direct DB access)
@@ -256,6 +286,7 @@ Contains detailed workflows for:
 ### Setup Steps
 
 1. **Clone and Install**
+
 ```bash
 git clone <repository-url>
 cd healthcare-app
@@ -263,6 +294,7 @@ npm install
 ```
 
 2. **Environment Setup**
+
 ```bash
 # Backend
 cp apps/backend/.env.example apps/backend/.env
@@ -274,21 +306,25 @@ cp apps/frontend/.env.example apps/frontend/.env.local
 ```
 
 3. **Start Development Environment**
+
 ```bash
 docker-compose up -d
 ```
 
 4. **Run Database Migrations**
+
 ```bash
 npm run prisma:migrate:dev --prefix apps/backend
 ```
 
 5. **Seed Database (Optional)**
+
 ```bash
 npm run prisma:seed --prefix apps/backend
 ```
 
 6. **Access the Application**
+
 - Frontend: http://localhost:3000
 - Backend API: http://localhost:3001
 - API Documentation: http://localhost:3001/api/docs
@@ -296,24 +332,28 @@ npm run prisma:seed --prefix apps/backend
 ## Project Milestones
 
 ### Phase 1: Foundation (Weeks 1-4)
+
 - [ ] Project setup and infrastructure
 - [ ] User authentication and authorization
 - [ ] Basic patient registration
 - [ ] Database schema implementation
 
 ### Phase 2: Core Features (Weeks 5-8)
+
 - [ ] Patient management complete
 - [ ] Visit documentation with SOAP notes
 - [ ] Vital signs recording
 - [ ] Prescription management
 
 ### Phase 3: Business Features (Weeks 9-12)
+
 - [ ] Billing and invoicing
 - [ ] Payment processing
 - [ ] Clinical reports
 - [ ] Financial reports
 
 ### Phase 4: Polish & Launch (Weeks 13-16)
+
 - [ ] Audit logging
 - [ ] Data backup system
 - [ ] Complete testing
@@ -324,12 +364,14 @@ npm run prisma:seed --prefix apps/backend
 ## Compliance Considerations
 
 ### HIPAA (Health Insurance Portability and Accountability Act)
+
 - Patient data encryption at rest and in transit
 - Access controls and audit logging
 - Secure authentication mechanisms
 - Data backup and recovery procedures
 
 ### GDPR (General Data Protection Regulation)
+
 - Right to access personal data
 - Right to erasure (with medical record retention considerations)
 - Data minimization principles
@@ -340,11 +382,13 @@ npm run prisma:seed --prefix apps/backend
 ## Support and Communication
 
 ### Documentation Updates
+
 - Documentation should be updated whenever features change
 - All team members can propose documentation improvements
 - Major changes require review before merging
 
 ### Questions and Clarifications
+
 - For technical questions: Reference implementation.md
 - For feature questions: Reference features.md
 - For user experience: Reference user-flow.md
@@ -353,6 +397,7 @@ npm run prisma:seed --prefix apps/backend
 ## Version History
 
 ### Version 1.0 (Documentation)
+
 - Initial comprehensive documentation
 - All core features specified
 - Technical architecture defined
@@ -361,6 +406,7 @@ npm run prisma:seed --prefix apps/backend
 ## Future Documentation Needs
 
 As the project evolves, consider adding:
+
 - API documentation (auto-generated from Swagger)
 - Deployment guide (specific to production environment)
 - User manual (end-user documentation)
@@ -373,6 +419,7 @@ As the project evolves, consider adding:
 ## Contributing to Documentation
 
 When updating documentation:
+
 1. Keep language clear and concise
 2. Include examples where helpful
 3. Update the revision date
@@ -394,16 +441,20 @@ When updating documentation:
 
 ## Quick Reference
 
-| Need to Know... | Read This Document |
-|----------------|-------------------|
-| What problem we're solving | project-overview.md |
-| What features we need | requirements.md, features.md |
-| How users will use it | user-flow.md |
-| How to build it | implementation.md, tech-stack.md |
-| How it's organized | project-structure.md |
-| Why we chose this tech | tech-stack.md |
-| What success looks like | project-overview.md |
+| Need to Know...            | Read This Document               |
+| -------------------------- | -------------------------------- |
+| What problem we're solving | project-overview.md              |
+| What features we need      | requirements.md, features.md     |
+| How users will use it      | user-flow.md                     |
+| How to build it            | implementation.md, tech-stack.md |
+| How it's organized         | project-structure.md             |
+| Why we chose this tech     | tech-stack.md                    |
+| What success looks like    | project-overview.md              |
 
 ---
 
 **Ready to build something amazing? Start with project-overview.md and dive in!** 🚀🏥
+
+in @frontend. I wany to use the real data instead of mock data, kindly modify it now and for the API endpoints kindly check the endpoints in the
+backend
+, during modifiaction act as a system archetic and a software engineer and before modification markdown all the moduke what are done and not yet implement.

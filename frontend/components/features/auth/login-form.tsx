@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from 'next/navigation';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, Activity, Lock, Mail } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import { loginSchema, type LoginFormData } from '@/lib/validators';
 import { Button } from '@/components/ui/button';
@@ -29,7 +29,6 @@ export function LoginForm() {
   const onSubmit = async (data: LoginFormData) => {
     setError(null);
     try {
-      // Call Next.js API route instead of backend directly
       const response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -42,14 +41,9 @@ export function LoginForm() {
       }
 
       const result = await response.json();
-      await login(result); // This will update the store
+      await login(result);
       
-      // Get current language from pathname or use default
-      const { getLanguageFromPath, getDashboardRoute } = await import('@/lib/utils/route-helpers');
-      const language = getLanguageFromPath(window.location.pathname);
-      
-      // Redirect to dashboard with language prefix
-      router.push(getDashboardRoute(language));
+      router.push('/dashboard');
     } catch (err: unknown) {
       setError((err as Error).message || 'Login failed. Please check your credentials.');
     }
@@ -58,96 +52,98 @@ export function LoginForm() {
   return (
     <div className="w-full">
       {/* Branding Section */}
-      <div className="text-center mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Medical Clinic</h1>
-        <p className="text-xs uppercase tracking-wider text-gray-600">
-          MEDICAL CLINIC PATIENT MANAGEMENT SYSTEM
+      <div className="text-center mb-8 space-y-2">
+        <div className="inline-flex items-center justify-center h-12 w-12 rounded-xl bg-primary/10 text-primary mb-2 shadow-sm ring-1 ring-primary/20">
+          <Activity className="h-6 w-6" />
+        </div>
+        <h1 className="text-2xl font-bold tracking-tight text-foreground">Welcome Back</h1>
+        <p className="text-sm text-muted-foreground">
+          Enter your credentials to access the EMR
         </p>
       </div>
 
-      {/* Login Form */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+      {/* Login Form Card */}
+      <div className="bg-white/90 backdrop-blur-xl border border-white/40 shadow-2xl rounded-2xl p-6 md:p-8">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           {error && (
-            <div className="rounded-md bg-red-50 p-3 text-sm text-red-800">
+            <div className="rounded-xl bg-red-50 p-4 text-sm text-red-600 flex items-center border border-red-100 animate-in fade-in slide-in-from-top-1">
+              <AlertTriangle className="h-4 w-4 mr-2 shrink-0" />
               {error}
             </div>
           )}
 
           <div className="space-y-2">
-            <Label htmlFor="email" className="text-sm font-medium text-gray-700">
-              Email
-            </Label>
-            <Input
-              id="email"
-              type="email"
-              placeholder="you@example.com"
-              {...register('email')}
-              disabled={isLoading}
-              className="w-full"
-            />
+            <Label htmlFor="email" className="text-slate-600 font-semibold ml-1">Email</Label>
+            <div className="relative group">
+              <Mail className="absolute left-3 top-3 h-5 w-5 text-slate-400 group-focus-within:text-primary transition-colors" />
+              <Input
+                id="email"
+                type="email"
+                placeholder="doctor@clinic.com"
+                {...register('email')}
+                disabled={isLoading}
+                className="pl-10 h-12 bg-slate-50 border-slate-200 rounded-xl transition-all focus:bg-white focus:ring-4 focus:ring-primary/10"
+              />
+            </div>
             {errors.email && (
-              <p className="text-sm text-red-600">{errors.email.message}</p>
+              <p className="text-xs text-destructive font-medium ml-1">{errors.email.message}</p>
             )}
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="password" className="text-sm font-medium text-gray-700">
-              Password
-            </Label>
-            <div className="relative">
+            <div className="flex items-center justify-between ml-1">
+              <Label htmlFor="password" className="text-slate-600 font-semibold">Password</Label>
+              <a href={ROUTES.FORGOT_PASSWORD} className="text-xs font-bold text-primary hover:text-primary/80 transition-colors">
+                Forgot password?
+              </a>
+            </div>
+            <div className="relative group">
+              <Lock className="absolute left-3 top-3 h-5 w-5 text-slate-400 group-focus-within:text-primary transition-colors" />
               <Input
                 id="password"
                 type={showPassword ? 'text' : 'password'}
                 placeholder="••••••••"
                 {...register('password')}
                 disabled={isLoading}
-                className="w-full pr-10"
+                className="pl-10 pr-10 h-12 bg-slate-50 border-slate-200 rounded-xl transition-all focus:bg-white focus:ring-4 focus:ring-primary/10"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
+                className="absolute right-3 top-3.5 text-slate-400 hover:text-slate-600 transition-colors"
                 tabIndex={-1}
               >
-                {showPassword ? (
-                  <EyeOff className="h-5 w-5" />
-                ) : (
-                  <Eye className="h-5 w-5" />
-                )}
+                {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
               </button>
             </div>
             {errors.password && (
-              <p className="text-sm text-red-600">{errors.password.message}</p>
+              <p className="text-xs text-destructive font-medium ml-1">{errors.password.message}</p>
             )}
-          </div>
-
-          <div className="flex items-center">
-            <a
-              href={ROUTES.FORGOT_PASSWORD}
-              className="text-sm text-blue-600 hover:underline"
-            >
-              Forgot password?
-            </a>
           </div>
 
           <Button
             type="submit"
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5"
+            className="w-full h-12 font-bold text-lg rounded-xl bg-blue-600 hover:bg-blue-700 shadow-xl shadow-blue-500/20 active:scale-[0.98] transition-all cursor-pointer"
             disabled={isLoading}
           >
-            {isLoading ? 'Signing in...' : 'Sign In'}
+            {isLoading ? 'Verifying...' : 'Sign In'}
           </Button>
         </form>
       </div>
 
-      {/* Copyright Notice */}
+      {/* Footer */}
       <div className="text-center mt-8">
-        <p className="text-xs text-gray-500">
-          ©2025 Medical clinic. All rights reserved.
+        <p className="text-xs text-muted-foreground">
+          Protected by industry standard encryption. <br/>
+          ©2026 eHealth System.
         </p>
       </div>
     </div>
   );
 }
 
+function AlertTriangle({ className }: { className?: string }) {
+  return (
+    <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+  )
+}
