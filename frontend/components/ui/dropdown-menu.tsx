@@ -54,7 +54,7 @@ const DropdownMenuTrigger = React.forwardRef<
   HTMLButtonElement,
   React.ButtonHTMLAttributes<HTMLButtonElement> & { asChild?: boolean }
 >(({ className, children, asChild, ...props }, ref) => {
-  const { setOpen, triggerRef } = React.useContext(DropdownMenuContext)!;
+  const { setOpen, triggerRef, open } = React.useContext(DropdownMenuContext)!;
   const internalRef = React.useRef<HTMLButtonElement>(null);
 
   // Combine refs
@@ -71,7 +71,7 @@ const DropdownMenuTrigger = React.forwardRef<
     return React.cloneElement(children, {
       ...props,
       onClick: (e: React.MouseEvent<Element, MouseEvent>) => {
-        setOpen(true);
+        setOpen(!open);
         // Store ref after click
         const target = e.currentTarget as HTMLElement;
         if (target) {
@@ -86,7 +86,7 @@ const DropdownMenuTrigger = React.forwardRef<
     <button
       ref={internalRef}
       className={className}
-      onClick={() => setOpen(true)}
+      onClick={() => setOpen(!open)}
       {...props}
     >
       {children}
@@ -229,7 +229,7 @@ const DropdownMenuContent = React.forwardRef<
       <div
         ref={contentRef}
         className={cn(
-          "z-[60] min-w-32 overflow-hidden bg-white text-gray-950",
+          "z-60 min-w-32 overflow-hidden bg-white text-gray-950",
           "shadow-xl",
           "transition-all duration-200 ease-out",
           open ? "opacity-100 scale-100 translate-y-0" : "opacity-0 scale-95 translate-y-[-4px]",
@@ -312,10 +312,40 @@ const DropdownMenuItem = React.forwardRef<
 });
 DropdownMenuItem.displayName = "DropdownMenuItem";
 
+const DropdownMenuLabel = React.forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement> & { inset?: boolean }
+>(({ className, inset, ...props }, ref) => (
+  <div
+    ref={ref}
+    className={cn(
+      "px-2 py-1.5 text-sm font-semibold",
+      inset && "pl-8",
+      className
+    )}
+    {...props}
+  />
+));
+DropdownMenuLabel.displayName = "DropdownMenuLabel";
+
+const DropdownMenuSeparator = React.forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement>
+>(({ className, ...props }, ref) => (
+  <div
+    ref={ref}
+    className={cn("-mx-1 my-1 h-px bg-gray-100", className)}
+    {...props}
+  />
+));
+DropdownMenuSeparator.displayName = "DropdownMenuSeparator";
+
 export {
   DropdownMenu,
   DropdownMenuTrigger,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
 };
 

@@ -6,7 +6,6 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useParams } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import {
-  LogOut,
   Menu,
   X,
   Activity,
@@ -16,8 +15,8 @@ import {
   Loader2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
-import { useAuth } from '@/hooks/use-auth';
+
+
 import { useMenuItems } from '@/hooks/use-menu-items';
 import { getMenuIcon } from '@/lib/menu-icon-map';
 import type { MenuItem } from '@/app/api/menu-items/route';
@@ -37,7 +36,7 @@ export function Sidebar({ open, onToggle }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const params = useParams();
-  const { user, logout } = useAuth();
+
   const { topLevelItems, settingsMenu, isLoading, error } = useMenuItems();
   const [settingsOpen, setSettingsOpen] = useState(false);
   
@@ -307,49 +306,7 @@ export function Sidebar({ open, onToggle }: SidebarProps) {
             )}
           </nav>
 
-          <Separator />
 
-          {/* User section */}
-          {open && user && (
-            <div className="p-4 border-t border-gray-200 shrink-0">
-              <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center shrink-0">
-                  <span className="text-blue-600 font-semibold text-sm shrink-0">
-                    {user.firstName[0]}{user.lastName[0]}
-                  </span>
-                </div>
-                <div className="flex-1 min-w-0 overflow-hidden">
-                  <p className="text-sm font-medium text-gray-900 truncate">
-                    {user.firstName} {user.lastName}
-                  </p>
-                  <p className="text-xs text-gray-500 truncate">{user.email}</p>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Logout */}
-          <div className={cn(
-            "border-t border-gray-200 shrink-0",
-            open ? "p-4" : "p-2"
-          )}>
-            <Button
-              variant="ghost"
-              className={cn(
-                'w-full whitespace-nowrap transition-all duration-200 group',
-                open 
-                  ? 'justify-start text-gray-700 hover:text-red-600 hover:bg-red-50' 
-                  : 'justify-center px-0 text-gray-600 hover:text-red-600 hover:bg-red-50'
-              )}
-              onClick={logout}
-              title={!open ? "Logout" : undefined}
-            >
-              <LogOut className="h-5 w-5 shrink-0 transition-colors text-gray-500 group-hover:text-red-600" />
-              {open && (
-                <span className="ml-3 truncate font-medium">Logout</span>
-              )}
-            </Button>
-          </div>
         </div>
       </aside>
     </>

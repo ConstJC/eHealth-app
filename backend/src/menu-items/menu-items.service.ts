@@ -126,6 +126,10 @@ export class MenuItemsService {
       .map((item) => {
         const roleMenu = item.roleMenus[0];
         const children = item.children
+          .filter((child) => {
+            const label = (child.roleMenus[0]?.label || child.label).toLowerCase();
+            return label !== 'audit logs' && label !== 'systems';
+          })
           .map((child) => {
             const childRoleMenu = child.roleMenus[0];
             return {
@@ -148,6 +152,10 @@ export class MenuItemsService {
           parentId: item.parentId,
           ...(children.length > 0 && { children }),
         };
+      })
+      .filter((item) => {
+        const label = item.label.toLowerCase();
+        return label !== 'audit logs' && label !== 'systems';
       })
       .sort((a, b) => a.order - b.order);
   }

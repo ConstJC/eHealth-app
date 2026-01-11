@@ -5,7 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Avatar } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { MoreVertical, User, Calendar, Phone, Mail, MapPin, Droplet, AlertTriangle } from 'lucide-react';
+import { MoreVertical, User, Calendar, Phone, Mail } from 'lucide-react';
 import { calculateAge, formatPatientId, formatDate, formatPhone } from '@/lib/formatters';
 import type { Patient } from '@/types/patient.types';
 import {
@@ -26,8 +26,7 @@ export function PatientCard({ patient, onView, onEdit, onNewVisit }: PatientCard
   const age = calculateAge(patient.dateOfBirth);
   const initials = `${patient.firstName[0]}${patient.lastName[0]}`;
   const statusVariant = patient.status === 'ACTIVE' ? 'success' : 'outline';
-  const hasAllergies = patient.allergies && patient.allergies.length > 0;
-  const hasChronicConditions = patient.chronicConditions && patient.chronicConditions.length > 0;
+
 
   return (
     <Card className="hover:shadow-md transition-shadow">
@@ -98,7 +97,7 @@ export function PatientCard({ patient, onView, onEdit, onNewVisit }: PatientCard
         </div>
 
         {/* Contact Information */}
-        <div className="space-y-2 mb-4 pb-4 border-b border-gray-200">
+        <div className="space-y-2 mt-4">
           {patient.phone && (
             <div className="flex items-center gap-2 text-sm text-gray-600">
               <Phone className="h-3.5 w-3.5 text-gray-400" />
@@ -109,43 +108,6 @@ export function PatientCard({ patient, onView, onEdit, onNewVisit }: PatientCard
             <div className="flex items-center gap-2 text-sm text-gray-600">
               <Mail className="h-3.5 w-3.5 text-gray-400" />
               <span className="truncate">{patient.email}</span>
-            </div>
-          )}
-          {patient.address && (
-            <div className="flex items-center gap-2 text-sm text-gray-600">
-              <MapPin className="h-3.5 w-3.5 text-gray-400" />
-              <span className="truncate">{patient.address}</span>
-            </div>
-          )}
-        </div>
-
-        {/* Medical Information */}
-        <div className="space-y-2">
-          {patient.bloodType && (
-            <div className="flex items-center gap-2 text-sm text-gray-600">
-              <Droplet className="h-3.5 w-3.5 text-red-400" />
-              <span>Blood Type: {patient.bloodType}</span>
-            </div>
-          )}
-          {hasAllergies && (
-            <div className="flex items-start gap-2 text-sm">
-              <AlertTriangle className="h-3.5 w-3.5 text-amber-500 mt-0.5 flex-shrink-0" />
-              <div className="flex-1 min-w-0">
-                <span className="text-gray-600">Allergies: </span>
-                <span className="text-amber-700 font-medium">
-                  {patient.allergies.slice(0, 2).join(', ')}
-                  {patient.allergies.length > 2 && ` +${patient.allergies.length - 2} more`}
-                </span>
-              </div>
-            </div>
-          )}
-          {hasChronicConditions && (
-            <div className="text-sm text-gray-600">
-              <span>Conditions: </span>
-              <span className="font-medium text-gray-700">
-                {patient.chronicConditions.slice(0, 2).join(', ')}
-                {patient.chronicConditions.length > 2 && ` +${patient.chronicConditions.length - 2} more`}
-              </span>
             </div>
           )}
         </div>
