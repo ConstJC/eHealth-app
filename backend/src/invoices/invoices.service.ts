@@ -15,7 +15,7 @@ import {
 } from './dto';
 import { Invoice, Prisma, InvoiceStatus } from '@prisma/client';
 
-interface PaymentRecord {
+export interface PaymentRecord {
   date: string;
   amount: number;
   method: string;
@@ -360,7 +360,7 @@ export class InvoicesService {
       this.calculateTotals(items, discount, discountPercentage, taxRate);
 
     // Update balance based on new total and existing payments
-    const existingPayments = (invoice.payments as PaymentRecord[]) || [];
+    const existingPayments = (invoice.payments as unknown as PaymentRecord[]) || [];
     const totalPaid = existingPayments.reduce(
       (sum, payment) => sum + payment.amount,
       0,
@@ -368,7 +368,7 @@ export class InvoicesService {
     const newBalance = total - totalPaid;
 
     // Update status based on balance
-    let status = invoice.status;
+    let status: InvoiceStatus = invoice.status;
     if (newBalance <= 0) {
       status = InvoiceStatus.PAID;
     } else if (totalPaid > 0) {
@@ -434,7 +434,7 @@ export class InvoicesService {
     }
 
     // Get existing payments
-    const existingPayments = (invoice.payments as PaymentRecord[]) || [];
+    const existingPayments = (invoice.payments as unknown as PaymentRecord[]) || [];
 
     // Add new payment
     const newPayment: PaymentRecord = {
@@ -493,7 +493,7 @@ export class InvoicesService {
    */
   async getPayments(id: string): Promise<PaymentRecord[]> {
     const invoice = await this.findOne(id);
-    return (invoice.payments as PaymentRecord[]) || [];
+    return (invoice.payments as unknown as PaymentRecord[]) || [];
   }
 
   /**
@@ -517,14 +517,14 @@ export class InvoicesService {
       invoice.taxRate,
     );
 
-    const existingPayments = (invoice.payments as PaymentRecord[]) || [];
+    const existingPayments = (invoice.payments as unknown as PaymentRecord[]) || [];
     const totalPaid = existingPayments.reduce(
       (sum, payment) => sum + payment.amount,
       0,
     );
     const newBalance = total - totalPaid;
 
-    let status = invoice.status;
+    let status: InvoiceStatus = invoice.status;
     if (newBalance <= 0) {
       status = InvoiceStatus.PAID;
     } else if (totalPaid > 0) {
@@ -583,7 +583,7 @@ export class InvoicesService {
     }
 
     // Get existing payments
-    const existingPayments = (invoice.payments as PaymentRecord[]) || [];
+    const existingPayments = (invoice.payments as unknown as PaymentRecord[]) || [];
 
     // Add refund as negative payment
     const refundPayment: PaymentRecord = {

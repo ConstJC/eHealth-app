@@ -1,4 +1,4 @@
-name: auth-token-based-db
+name: healthcare-db
 
 services:
   # Postgres

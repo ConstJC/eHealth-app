@@ -108,6 +108,9 @@ export class FilesService {
     const filePath = path.join(this.uploadDir, uniqueFilename);
 
     // Save file
+    if (!file.buffer) {
+      throw new BadRequestException('File buffer is empty');
+    }
     fs.writeFileSync(filePath, file.buffer);
 
     // Return metadata
@@ -300,20 +303,21 @@ export class FilesService {
 
     // Remove from visit attachments if exists
     // Note: Prisma doesn't support array contains directly, so we'll filter in memory
-    const allVisits = await this.prisma.visit.findMany({
-      where: {
-        attachments: { not: null },
-      },
-    });
+    const fileUrl = this.generateFileUrl(filename);
     
-    const visits = allVisits.filter((visit) => {
-      const attachments = (visit.attachments || []) as string[];
-      return attachments.some((url) => url.includes(filename));
+    // Remove from visit attachments if exists
+    // Use 'has' filter to find visits with this specific attachment
+    const visits = await this.prisma.visit.findMany({
+      where: {
+        attachments: { has: fileUrl },
+      },
     });
 
     for (const visit of visits) {
       const attachments = (visit.attachments || []) as string[];
-      const updated = attachments.filter((url) => !url.includes(filename));
+      // Filter out exact matches
+      const updated = attachments.filter((url) => url !== fileUrl && !url.includes(filename));
+      
       await this.prisma.visit.update({
         where: { id: visit.id },
         data: { attachments: updated },
