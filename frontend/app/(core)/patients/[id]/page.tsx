@@ -91,7 +91,7 @@ export default function PatientDetailPage() {
             </Avatar>
             <div>
               <h1 className="text-3xl font-bold text-gray-900">
-                {patient.firstName} {patient.lastName}
+                {patient.firstName} {patient.middleName ? `${patient.middleName} ` : ''}{patient.lastName}
               </h1>
               <div className="flex items-center gap-4 mt-1 text-sm text-gray-600">
                 <span className="font-mono">{patient.patientId}</span>

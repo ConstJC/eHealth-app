@@ -20,7 +20,7 @@ export function Sidebar({ open, onToggle }: SidebarProps) {
     <aside
       className={cn(
         'glass relative h-full transition-all duration-300 ease-in-out border-r border-slate-200/60 z-20 flex flex-col shadow-xl',
-        open ? 'w-72' : 'w-20'
+        open ? 'w-64' : 'w-16'
       )}
     >
       {/* Brand */}
@@ -41,7 +41,7 @@ export function Sidebar({ open, onToggle }: SidebarProps) {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 py-6 px-4 space-y-2 overflow-y-auto">
+      <nav className="flex-1 py-6 px-2 space-y-2 overflow-y-auto">
         <p className={cn("text-xs font-bold text-slate-500 uppercase tracking-wider mb-3 px-3", !open && "text-center sr-only")}>
           Menu
         </p>
@@ -53,8 +53,8 @@ export function Sidebar({ open, onToggle }: SidebarProps) {
               key={item.href}
               href={item.href}
               className={cn(
-                "flex items-center gap-3.5 py-3.5 rounded-xl transition-all duration-200 group relative",
-                !open ? "justify-center px-2" : "px-4",
+                "flex items-center rounded-xl transition-all duration-200 group relative",
+                !open ? "justify-center p-3" : "gap-3.5 py-3.5 px-4",
                 isActive 
                   ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-500/25" 
                   : "text-slate-700 hover:bg-slate-100 hover:text-slate-900 hover:shadow-sm"
@@ -74,8 +74,8 @@ export function Sidebar({ open, onToggle }: SidebarProps) {
         <Link
           href={SETTINGS_ITEM.href}
           className={cn(
-            "flex items-center gap-3.5 py-3.5 rounded-xl transition-all duration-200 group relative",
-            !open ? "justify-center px-2" : "px-4",
+            "flex items-center rounded-xl transition-all duration-200 group relative",
+            !open ? "justify-center p-3" : "gap-3.5 py-3.5 px-4",
             pathname.startsWith(SETTINGS_ITEM.href)
               ? "bg-slate-100 text-slate-900 font-semibold shadow-sm" 
               : "text-slate-700 hover:bg-slate-100 hover:text-slate-900 hover:shadow-sm"

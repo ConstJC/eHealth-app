@@ -314,6 +314,7 @@ async function main() {
     create: {
       patientId: `P${currentYear}00001`,
       firstName: 'James',
+      middleName: 'Robert',
       lastName: 'Anderson',
       dateOfBirth: new Date('1985-05-15'),
       gender: Gender.MALE,
@@ -338,6 +339,7 @@ async function main() {
     create: {
       patientId: `P${currentYear}00002`,
       firstName: 'Maria',
+      middleName: 'Elena',
       lastName: 'Garcia',
       dateOfBirth: new Date('1992-08-22'),
       gender: Gender.FEMALE,
@@ -364,6 +366,7 @@ async function main() {
     create: {
       patientId: `P${currentYear}00003`,
       firstName: 'Robert',
+      middleName: 'James',
       lastName: 'Thompson',
       dateOfBirth: new Date('1968-03-10'),
       gender: Gender.MALE,
@@ -390,6 +393,7 @@ async function main() {
     create: {
       patientId: `P${currentYear}00004`,
       firstName: 'Emily',
+      middleName: 'Grace',
       lastName: 'Chen',
       dateOfBirth: new Date('2000-11-05'),
       gender: Gender.FEMALE,

@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { Card, CardContent } from '@/components/ui/card';
-import { Avatar } from '@/components/ui/avatar';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { MoreVertical, User, Calendar, Phone, Mail } from 'lucide-react';
@@ -34,17 +34,15 @@ export function PatientCard({ patient, onView, onEdit, onNewVisit }: PatientCard
         <div className="flex items-start justify-between mb-4">
           <div className="flex items-center gap-3 flex-1 min-w-0">
             <Link href={`/patients/${patient.id}`}>
-              <Avatar
-                src={patient.photoUrl}
-                alt={`${patient.firstName} ${patient.lastName}`}
-                fallback={initials}
-                size="md"
-              />
+              <Avatar className="h-10 w-10">
+                <AvatarImage src={patient.photoUrl} alt={`${patient.firstName} ${patient.lastName}`} />
+                <AvatarFallback>{initials}</AvatarFallback>
+              </Avatar>
             </Link>
             <div className="flex-1 min-w-0">
               <Link href={`/patients/${patient.id}`}>
                 <h3 className="font-semibold text-lg truncate hover:text-blue-600 transition-colors">
-                  {patient.firstName} {patient.lastName}
+                  {patient.firstName} {patient.middleName ? `${patient.middleName} ` : ''}{patient.lastName}
                 </h3>
               </Link>
               <p className="text-sm text-gray-500 font-mono mt-0.5">

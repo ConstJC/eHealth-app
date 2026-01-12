@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Avatar } from '@/components/ui/avatar';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -56,17 +56,23 @@ export function PatientTable({ patients, onView, onEdit, onNewVisit }: PatientTa
                 <TableCell>
                   <div className="flex items-center gap-3">
                     <Link href={`/patients/${patient.id}`}>
-                      <Avatar
-                        src={patient.photoUrl}
-                        alt={`${patient.firstName} ${patient.lastName}`}
-                        fallback={initials}
-                        size="sm"
-                      />
+                      <Avatar className="h-8 w-8">
+                        <AvatarImage src={patient.photoUrl} alt={`${patient.firstName} ${patient.lastName}`} />
+                        <AvatarFallback>{initials}</AvatarFallback>
+                      </Avatar>
                     </Link>
                     <div className="min-w-0">
                       <Link href={`/patients/${patient.id}`}>
                         <div className="font-semibold text-gray-900 hover:text-blue-600 transition-colors truncate">
-                          {patient.firstName} {patient.lastName}
+                          <span className="font-bold">{patient.lastName}</span>
+                          <span className="text-gray-400 mx-1">|</span>
+                          <span>{patient.firstName}</span>
+                          {patient.middleName && (
+                            <>
+                              <span className="text-gray-400 mx-1">·</span>
+                              <span className="text-gray-600">{patient.middleName}</span>
+                            </>
+                          )}
                         </div>
                       </Link>
                       {patient.email && (

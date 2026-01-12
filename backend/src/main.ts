@@ -16,7 +16,7 @@ import { AllExceptionsFilter } from './common/filters/http-exception.filter';
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule, { cors: true });
+  const app = await NestFactory.create(AppModule);
   const configService = app.get(ConfigService);
 
   // Enable shutdown hooks for graceful shutdown
@@ -40,21 +40,35 @@ async function bootstrap() {
   const frontendUrl = configService.get<string>('app.url');
   const port = configService.get<number>('port') || 4081;
   const apiUrl = configService.get<string>('app.backendUrl');
+  const nodeEnv = configService.get<string>('app.nodeEnv') || 'development';
 
   app.enableCors({
     origin: (origin, callback) => {
       // Allow requests with no origin (like mobile apps, curl requests, or Swagger UI)
       if (!origin) return callback(null, true);
 
-      // Allow requests from frontend URL and Swagger UI (same origin as API)
+      // Development: Allow any localhost port
+      if (nodeEnv === 'development') {
+        const localhostRegex = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/;
+        if (localhostRegex.test(origin)) {
+          console.log(`✅ CORS: Allowed localhost origin: ${origin}`);
+          return callback(null, true);
+        }
+      }
+
+      // Production or specific allowed origins
       const allowedOrigins = [
         frontendUrl,
         apiUrl, // Allow Swagger UI from same origin
-      ];
+      ].filter(Boolean); // Remove undefined values
 
       if (allowedOrigins.includes(origin)) {
+        console.log(`✅ CORS: Allowed origin: ${origin}`);
         callback(null, true);
       } else {
+        console.error(`❌ CORS: Blocked origin: ${origin}`);
+        console.error(`   Allowed origins: ${allowedOrigins.join(', ')}`);
+        console.error(`   Environment: ${nodeEnv}`);
         callback(new Error('Not allowed by CORS'));
       }
     },
@@ -134,12 +148,33 @@ async function bootstrap() {
   });
 
   await app.listen(port);
-  console.log('frontendUrl', frontendUrl);
-  console.log('port', port);
-  console.log('apiUrl', apiUrl);
-  console.log(`🚀 Application is running on: http://localhost:${port}`);
-  console.log(`📚 Swagger documentation: http://localhost:${port}/docs`);
+  
+  // Startup configuration summary
+  console.log('\n' + '='.repeat(60));
+  console.log('🚀 Application Started Successfully');
+  console.log('='.repeat(60));
+  console.log(`📝 Environment: ${nodeEnv}`);
+  console.log(`🌐 Backend URL: http://localhost:${port}`);
   console.log(`🔗 API Base URL: http://localhost:${port}/api/v1`);
+  console.log(`📚 Swagger Docs: http://localhost:${port}/docs`);
+  console.log('─'.repeat(60));
+  console.log('🔧 CORS Configuration:');
+  console.log(`   Frontend URL: ${frontendUrl || 'Not set'}`);
+  console.log(`   Backend URL: ${apiUrl || 'Not set'}`);
+  if (nodeEnv === 'development') {
+    console.log('   🔓 Development Mode: All localhost origins allowed');
+  } else {
+    console.log('   🔒 Production Mode: Strict origin validation');
+  }
+  console.log('='.repeat(60) + '\n');
+
+  // Validation warnings
+  if (!frontendUrl) {
+    console.warn('⚠️  WARNING: FRONTEND_URL is not set in environment variables');
+  }
+  if (nodeEnv === 'production' && frontendUrl?.includes('localhost')) {
+    console.warn('⚠️  WARNING: FRONTEND_URL contains localhost in production mode!');
+  }
 }
 
 bootstrap();

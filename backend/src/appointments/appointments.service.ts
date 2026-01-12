@@ -20,9 +20,30 @@ export class AppointmentsService {
     });
   }
 
-  async findAll(status?: AppointmentStatus) {
+  async findAll(status?: AppointmentStatus[], date?: string) {
+    const where: any = {};
+    
+    // Handle multiple status values
+    if (status && status.length > 0) {
+      where.status = status.length === 1 ? status[0] : { in: status };
+    }
+    
+    // Handle date filter
+    if (date) {
+      const startOfDay = new Date(date);
+      startOfDay.setHours(0, 0, 0, 0);
+      
+      const endOfDay = new Date(date);
+      endOfDay.setHours(23, 59, 59, 999);
+      
+      where.startTime = {
+        gte: startOfDay,
+        lte: endOfDay,
+      };
+    }
+    
     return this.prisma.appointment.findMany({
-      where: status ? { status } : {},
+      where,
       include: {
         patient: true,
       },

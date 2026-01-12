@@ -247,7 +247,7 @@ JWT_REFRESH_EXPIRES_IN="7d"
 # Application
 NODE_ENV="development"
 PORT=4081
-FRONTEND_URL="http://localhost:8000"
+FRONTEND_URL="http://localhost:3000"
 
 # Email Configuration
 SMTP_HOST="smtp.gmail.com"

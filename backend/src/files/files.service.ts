@@ -302,7 +302,6 @@ export class FilesService {
     });
 
     // Remove from visit attachments if exists
-    // Note: Prisma doesn't support array contains directly, so we'll filter in memory
     const fileUrl = this.generateFileUrl(filename);
     
     // Remove from visit attachments if exists

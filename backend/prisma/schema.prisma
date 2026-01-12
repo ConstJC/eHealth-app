@@ -159,6 +159,7 @@ model Patient {
   id          String   @id @default(cuid())
   patientId   String   @unique // e.g., P2024-00001
   firstName   String
+  middleName  String?
   lastName    String
   dateOfBirth DateTime
   gender      Gender

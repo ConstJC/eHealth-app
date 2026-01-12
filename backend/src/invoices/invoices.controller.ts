@@ -181,7 +181,7 @@ export class InvoicesController {
     description: 'Payment history retrieved successfully',
   })
   @ApiResponse({ status: 404, description: 'Invoice not found' })
-  async getPayments(@Param('id') id: string) {
+  async getPayments(@Param('id') id: string): Promise<any[]> {
     return this.invoicesService.getPayments(id);
   }
 

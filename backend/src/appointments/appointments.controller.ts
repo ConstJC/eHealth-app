@@ -40,8 +40,12 @@ export class AppointmentsController {
   @Get()
   @Roles(Role.ADMIN, Role.DOCTOR, Role.NURSE, Role.RECEPTIONIST)
   @ApiOperation({ summary: 'Get all appointments' })
-  async findAll(@Query('status') status?: AppointmentStatus) {
-    return this.appointmentsService.findAll(status);
+  async findAll(@Query('status') status?: string, @Query('date') date?: string) {
+    // Parse comma-separated status values into an array
+    const statusArray = status 
+      ? status.split(',').map(s => s.trim() as AppointmentStatus)
+      : undefined;
+    return this.appointmentsService.findAll(statusArray, date);
   }
 
   @Get(':id')

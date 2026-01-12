@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Select } from '@/components/ui/select';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { RadioGroup, RadioGroupItem, RadioGroupLabel } from '@/components/ui/radio-group';
 import { Form, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -18,6 +18,7 @@ import { Loader2 } from 'lucide-react';
 
 const patientSchema = z.object({
   firstName: z.string().min(2, 'First name must be at least 2 characters'),
+  middleName: z.string().optional(),
   lastName: z.string().min(2, 'Last name must be at least 2 characters'),
   dateOfBirth: z.string().min(1, 'Date of birth is required'),
   gender: z.nativeEnum(Gender),
@@ -61,6 +62,7 @@ export function PatientForm({ patient, onSubmit, onCancel, isLoading = false }: 
     defaultValues: patient
       ? {
           firstName: patient.firstName,
+          middleName: patient.middleName || '',
           lastName: patient.lastName,
           dateOfBirth: patient.dateOfBirth
             ? new Date(patient.dateOfBirth).toISOString().split('T')[0]
@@ -108,6 +110,7 @@ export function PatientForm({ patient, onSubmit, onCancel, isLoading = false }: 
 
       const submitData: CreatePatientInput | UpdatePatientInput = {
         firstName: data.firstName,
+        middleName: data.middleName || undefined,
         lastName: data.lastName,
         dateOfBirth: new Date(data.dateOfBirth),
         gender: data.gender,
@@ -157,6 +160,15 @@ export function PatientForm({ patient, onSubmit, onCancel, isLoading = false }: 
                   placeholder="John"
                 />
                 <FormMessage>{form.formState.errors.firstName?.message}</FormMessage>
+              </FormField>
+
+              <FormField name="middleName">
+                <FormLabel>Middle Name</FormLabel>
+                <Input
+                  {...form.register('middleName')}
+                  placeholder="Michael (optional)"
+                />
+                <FormMessage>{form.formState.errors.middleName?.message}</FormMessage>
               </FormField>
 
               <FormField name="lastName">
@@ -236,7 +248,7 @@ export function PatientForm({ patient, onSubmit, onCancel, isLoading = false }: 
             </FormField>
 
             <FormField name="photoUrl">
-              <FormLabel>Photo URL</FormLabel>
+              <FormLabel>Photo URL (optional)</FormLabel>
               <Input
                 type="url"
                 {...form.register('photoUrl')}
@@ -247,16 +259,20 @@ export function PatientForm({ patient, onSubmit, onCancel, isLoading = false }: 
 
             {patient && (
               <FormField name="status">
-                <FormLabel>Status</FormLabel>
+                <FormLabel className="text-sm md:text-base">Status</FormLabel>
                 <Select
-                  {...form.register('status')}
                   value={form.watch('status')}
-                  onChange={(e) => form.setValue('status', e.target.value as PatientStatus)}
+                  onValueChange={(value) => form.setValue('status', value as PatientStatus)}
                 >
-                  <option value={PatientStatus.ACTIVE}>Active</option>
-                  <option value={PatientStatus.INACTIVE}>Inactive</option>
+                  <SelectTrigger className="w-full h-10 text-sm md:text-base">
+                    <SelectValue placeholder="Select status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={PatientStatus.ACTIVE}>Active</SelectItem>
+                    <SelectItem value={PatientStatus.INACTIVE}>Inactive</SelectItem>
+                  </SelectContent>
                 </Select>
-                <FormMessage>{form.formState.errors.status?.message}</FormMessage>
+                <FormMessage className="text-xs md:text-sm">{form.formState.errors.status?.message}</FormMessage>
               </FormField>
             )}
           </CardContent>
@@ -306,23 +322,26 @@ export function PatientForm({ patient, onSubmit, onCancel, isLoading = false }: 
           </CardHeader>
           <CardContent className="space-y-4">
             <FormField name="bloodType">
-              <FormLabel>Blood Type</FormLabel>
+              <FormLabel className="text-sm md:text-base">Blood Type</FormLabel>
               <Select
-                {...form.register('bloodType')}
                 value={form.watch('bloodType') || ''}
-                onChange={(e) => form.setValue('bloodType', e.target.value || undefined)}
+                onValueChange={(value) => form.setValue('bloodType', value || undefined)}
               >
-                <option value="">Select blood type</option>
-                <option value="A+">A+</option>
-                <option value="A-">A-</option>
-                <option value="B+">B+</option>
-                <option value="B-">B-</option>
-                <option value="AB+">AB+</option>
-                <option value="AB-">AB-</option>
-                <option value="O+">O+</option>
-                <option value="O-">O-</option>
+                <SelectTrigger className="w-full h-10 text-sm md:text-base">
+                  <SelectValue placeholder="Select blood type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="A+">A+</SelectItem>
+                  <SelectItem value="A-">A-</SelectItem>
+                  <SelectItem value="B+">B+</SelectItem>
+                  <SelectItem value="B-">B-</SelectItem>
+                  <SelectItem value="AB+">AB+</SelectItem>
+                  <SelectItem value="AB-">AB-</SelectItem>
+                  <SelectItem value="O+">O+</SelectItem>
+                  <SelectItem value="O-">O-</SelectItem>
+                </SelectContent>
               </Select>
-              <FormMessage>{form.formState.errors.bloodType?.message}</FormMessage>
+              <FormMessage className="text-xs md:text-sm">{form.formState.errors.bloodType?.message}</FormMessage>
             </FormField>
 
             <FormField name="allergies">

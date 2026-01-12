@@ -360,7 +360,9 @@ export class InvoicesService {
       this.calculateTotals(items, discount, discountPercentage, taxRate);
 
     // Update balance based on new total and existing payments
-    const existingPayments = (invoice.payments as unknown as PaymentRecord[]) || [];
+    const existingPayments = Array.isArray(invoice.payments) 
+      ? (invoice.payments as unknown as PaymentRecord[]) 
+      : [];
     const totalPaid = existingPayments.reduce(
       (sum, payment) => sum + payment.amount,
       0,
@@ -368,7 +370,7 @@ export class InvoicesService {
     const newBalance = total - totalPaid;
 
     // Update status based on balance
-    let status: InvoiceStatus = invoice.status;
+    let status: InvoiceStatus;
     if (newBalance <= 0) {
       status = InvoiceStatus.PAID;
     } else if (totalPaid > 0) {
@@ -434,7 +436,9 @@ export class InvoicesService {
     }
 
     // Get existing payments
-    const existingPayments = (invoice.payments as unknown as PaymentRecord[]) || [];
+    const existingPayments = Array.isArray(invoice.payments)
+      ? (invoice.payments as unknown as PaymentRecord[])
+      : [];
 
     // Add new payment
     const newPayment: PaymentRecord = {
@@ -451,12 +455,9 @@ export class InvoicesService {
     const newBalance = invoice.total - totalPaid;
 
     // Update status
-    let status: InvoiceStatus;
-    if (newBalance <= 0) {
-      status = InvoiceStatus.PAID;
-    } else {
-      status = InvoiceStatus.PARTIAL;
-    }
+    const status: InvoiceStatus = newBalance <= 0 
+      ? InvoiceStatus.PAID 
+      : InvoiceStatus.PARTIAL;
 
     const updated = await this.prisma.invoice.update({
       where: { id },
@@ -493,7 +494,9 @@ export class InvoicesService {
    */
   async getPayments(id: string): Promise<PaymentRecord[]> {
     const invoice = await this.findOne(id);
-    return (invoice.payments as unknown as PaymentRecord[]) || [];
+    return Array.isArray(invoice.payments)
+      ? (invoice.payments as unknown as PaymentRecord[])
+      : [];
   }
 
   /**
@@ -517,14 +520,16 @@ export class InvoicesService {
       invoice.taxRate,
     );
 
-    const existingPayments = (invoice.payments as unknown as PaymentRecord[]) || [];
+    const existingPayments = Array.isArray(invoice.payments)
+      ? (invoice.payments as unknown as PaymentRecord[])
+      : [];
     const totalPaid = existingPayments.reduce(
       (sum, payment) => sum + payment.amount,
       0,
     );
     const newBalance = total - totalPaid;
 
-    let status: InvoiceStatus = invoice.status;
+    let status: InvoiceStatus;
     if (newBalance <= 0) {
       status = InvoiceStatus.PAID;
     } else if (totalPaid > 0) {
@@ -583,7 +588,9 @@ export class InvoicesService {
     }
 
     // Get existing payments
-    const existingPayments = (invoice.payments as unknown as PaymentRecord[]) || [];
+    const existingPayments = Array.isArray(invoice.payments)
+      ? (invoice.payments as unknown as PaymentRecord[])
+      : [];
 
     // Add refund as negative payment
     const refundPayment: PaymentRecord = {

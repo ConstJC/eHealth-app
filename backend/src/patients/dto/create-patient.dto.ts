@@ -22,6 +22,15 @@ export class CreatePatientDto {
   @MaxLength(50)
   firstName: string;
 
+  @ApiPropertyOptional({
+    description: 'Patient middle name',
+    example: 'Michael',
+  })
+  @IsOptional()
+  @IsString()
+  @MaxLength(50)
+  middleName?: string;
+
   @ApiProperty({
     description: 'Patient last name',
     example: 'Doe',

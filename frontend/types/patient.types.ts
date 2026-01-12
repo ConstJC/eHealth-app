@@ -13,6 +13,7 @@ export interface Patient {
   id: string;
   patientId: string;
   firstName: string;
+  middleName?: string;
   lastName: string;
   dateOfBirth: Date | string;
   gender: Gender;
@@ -43,6 +44,7 @@ export interface Patient {
 
 export interface CreatePatientInput {
   firstName: string;
+  middleName?: string;
   lastName: string;
   dateOfBirth: Date | string;
   gender: Gender;
