@@ -152,7 +152,7 @@ export function PatientForm({ patient, onSubmit, onCancel, isLoading = false }: 
             <CardTitle>Basic Information</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <FormField name="firstName">
                 <FormLabel required>First Name</FormLabel>
                 <Input
@@ -247,34 +247,36 @@ export function PatientForm({ patient, onSubmit, onCancel, isLoading = false }: 
               <FormMessage>{form.formState.errors.address?.message}</FormMessage>
             </FormField>
 
-            <FormField name="photoUrl">
-              <FormLabel>Photo URL (optional)</FormLabel>
-              <Input
-                type="url"
-                {...form.register('photoUrl')}
-                placeholder="https://example.com/photo.jpg"
-              />
-              <FormMessage>{form.formState.errors.photoUrl?.message}</FormMessage>
-            </FormField>
-
-            {patient && (
-              <FormField name="status">
-                <FormLabel className="text-sm md:text-base">Status</FormLabel>
-                <Select
-                  value={form.watch('status')}
-                  onValueChange={(value) => form.setValue('status', value as PatientStatus)}
-                >
-                  <SelectTrigger className="w-full h-10 text-sm md:text-base">
-                    <SelectValue placeholder="Select status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value={PatientStatus.ACTIVE}>Active</SelectItem>
-                    <SelectItem value={PatientStatus.INACTIVE}>Inactive</SelectItem>
-                  </SelectContent>
-                </Select>
-                <FormMessage className="text-xs md:text-sm">{form.formState.errors.status?.message}</FormMessage>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField name="photoUrl">
+                <FormLabel>Photo URL (optional)</FormLabel>
+                <Input
+                  type="url"
+                  {...form.register('photoUrl')}
+                  placeholder="https://example.com/photo.jpg"
+                />
+                <FormMessage>{form.formState.errors.photoUrl?.message}</FormMessage>
               </FormField>
-            )}
+
+              {patient && (
+                <FormField name="status">
+                  <FormLabel className="text-sm md:text-base">Status</FormLabel>
+                  <Select
+                    value={form.watch('status')}
+                    onValueChange={(value) => form.setValue('status', value as PatientStatus)}
+                  >
+                    <SelectTrigger className="w-full h-10 text-sm md:text-base">
+                      <SelectValue placeholder="Select status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value={PatientStatus.ACTIVE}>Active</SelectItem>
+                      <SelectItem value={PatientStatus.INACTIVE}>Inactive</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage className="text-xs md:text-sm">{form.formState.errors.status?.message}</FormMessage>
+                </FormField>
+              )}
+            </div>
           </CardContent>
         </Card>
 
@@ -321,28 +323,30 @@ export function PatientForm({ patient, onSubmit, onCancel, isLoading = false }: 
             <CardTitle>Medical Information</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <FormField name="bloodType">
-              <FormLabel className="text-sm md:text-base">Blood Type</FormLabel>
-              <Select
-                value={form.watch('bloodType') || ''}
-                onValueChange={(value) => form.setValue('bloodType', value || undefined)}
-              >
-                <SelectTrigger className="w-full h-10 text-sm md:text-base">
-                  <SelectValue placeholder="Select blood type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="A+">A+</SelectItem>
-                  <SelectItem value="A-">A-</SelectItem>
-                  <SelectItem value="B+">B+</SelectItem>
-                  <SelectItem value="B-">B-</SelectItem>
-                  <SelectItem value="AB+">AB+</SelectItem>
-                  <SelectItem value="AB-">AB-</SelectItem>
-                  <SelectItem value="O+">O+</SelectItem>
-                  <SelectItem value="O-">O-</SelectItem>
-                </SelectContent>
-              </Select>
-              <FormMessage className="text-xs md:text-sm">{form.formState.errors.bloodType?.message}</FormMessage>
-            </FormField>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <FormField name="bloodType">
+                <FormLabel className="text-sm md:text-base">Blood Type</FormLabel>
+                <Select
+                  value={form.watch('bloodType') || ''}
+                  onValueChange={(value) => form.setValue('bloodType', value || undefined)}
+                >
+                  <SelectTrigger className="w-full h-10 text-sm md:text-base">
+                    <SelectValue placeholder="Select blood type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="A+">A+</SelectItem>
+                    <SelectItem value="A-">A-</SelectItem>
+                    <SelectItem value="B+">B+</SelectItem>
+                    <SelectItem value="B-">B-</SelectItem>
+                    <SelectItem value="AB+">AB+</SelectItem>
+                    <SelectItem value="AB-">AB-</SelectItem>
+                    <SelectItem value="O+">O+</SelectItem>
+                    <SelectItem value="O-">O-</SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormMessage className="text-xs md:text-sm">{form.formState.errors.bloodType?.message}</FormMessage>
+              </FormField>
+            </div>
 
             <FormField name="allergies">
               <FormLabel>Allergies</FormLabel>
@@ -413,16 +417,15 @@ export function PatientForm({ patient, onSubmit, onCancel, isLoading = false }: 
                 />
                 <FormMessage>{form.formState.errors.insuranceNumber?.message}</FormMessage>
               </FormField>
+              <FormField name="insurancePolicyExpiry">
+                <FormLabel>Policy Expiry Date</FormLabel>
+                <Input
+                  type="date"
+                  {...form.register('insurancePolicyExpiry')}
+                />
+                <FormMessage>{form.formState.errors.insurancePolicyExpiry?.message}</FormMessage>
+              </FormField>
             </div>
-
-            <FormField name="insurancePolicyExpiry">
-              <FormLabel>Policy Expiry Date</FormLabel>
-              <Input
-                type="date"
-                {...form.register('insurancePolicyExpiry')}
-              />
-              <FormMessage>{form.formState.errors.insurancePolicyExpiry?.message}</FormMessage>
-            </FormField>
           </CardContent>
         </Card>
 
@@ -444,14 +447,14 @@ export function PatientForm({ patient, onSubmit, onCancel, isLoading = false }: 
           </CardContent>
         </Card>
 
-        {/* Form Actions */}
-        <div className="flex justify-end gap-4">
+        {/* Form Actions - Fixed at bottom in drawer */}
+        <div className="sticky bottom-0 -mx-6 -mb-6 mt-8 px-6 py-5 bg-gray-50/80 backdrop-blur-sm border-t border-gray-200 flex justify-end gap-3">
           {onCancel && (
-            <Button type="button" variant="outline" onClick={onCancel} disabled={isSubmitting || isLoading}>
+            <Button type="button" variant="outline" onClick={onCancel} disabled={isSubmitting || isLoading} className="min-w-[100px]">
               Cancel
             </Button>
           )}
-          <Button type="submit" disabled={isSubmitting || isLoading}>
+          <Button type="submit" disabled={isSubmitting || isLoading} className="min-w-[120px]">
             {(isSubmitting || isLoading) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             {patient ? 'Update Patient' : 'Register Patient'}
           </Button>

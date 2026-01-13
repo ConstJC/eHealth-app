@@ -3,16 +3,25 @@
 import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { usePatient } from '@/hooks/use-patient';
+import { useUpdatePatient } from '@/hooks/queries/use-patients';
 import { Breadcrumbs } from '@/components/common/breadcrumbs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { Separator } from '@/components/ui/separator';
 import { LoadingSpinner } from '@/components/common/loading-spinner';
 import { ErrorMessage } from '@/components/common/error-message';
 import { EmptyState } from '@/components/common/empty-state';
+import { PatientFormDrawer } from '@/components/features/patients/patient-form-drawer';
 import { 
   Edit, 
   FileText, 
@@ -26,9 +35,11 @@ import {
   Heart,
   Shield,
   Stethoscope,
+  FileCheck,
+  ChevronDown,
 } from 'lucide-react';
 import { format } from 'date-fns';
-import type { Patient } from '@/types/patient.types';
+import type { Patient, UpdatePatientInput } from '@/types/patient.types';
 import { Gender, PatientStatus } from '@/types/patient.types';
 
 export default function PatientDetailPage() {
@@ -38,6 +49,9 @@ export default function PatientDetailPage() {
   const { getPatient, isLoading, error } = usePatient();
   const [patient, setPatient] = useState<Patient | null>(null);
   const [activeTab, setActiveTab] = useState('overview');
+  const [isEditDrawerOpen, setIsEditDrawerOpen] = useState(false);
+  
+  const updatePatient = useUpdatePatient();
 
   useEffect(() => {
     const loadPatient = async () => {
@@ -53,6 +67,19 @@ export default function PatientDetailPage() {
       loadPatient();
     }
   }, [patientId, getPatient]);
+
+  const handleEditPatient = () => {
+    setIsEditDrawerOpen(true);
+  };
+
+  const handleUpdatePatient = async (data: UpdatePatientInput) => {
+    if (patient) {
+      await updatePatient.mutateAsync({ id: patient.id, data });
+      // Refresh patient data after update
+      const updatedData = await getPatient(patientId);
+      setPatient(updatedData);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -90,9 +117,14 @@ export default function PatientDetailPage() {
               <AvatarFallback className="text-lg">{initials}</AvatarFallback>
             </Avatar>
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">
-                {patient.firstName} {patient.middleName ? `${patient.middleName} ` : ''}{patient.lastName}
-              </h1>
+              <div className="flex items-center gap-3">
+                <h1 className="text-3xl font-bold text-gray-900">
+                  {patient.firstName} {patient.middleName ? `${patient.middleName} ` : ''}{patient.lastName}
+                </h1>
+                <Badge variant={patient.status === PatientStatus.ACTIVE ? 'default' : 'secondary'} className="text-xs">
+                  {patient.status}
+                </Badge>
+              </div>
               <div className="flex items-center gap-4 mt-1 text-sm text-gray-600">
                 <span className="font-mono">{patient.patientId}</span>
                 <span>•</span>
@@ -106,22 +138,51 @@ export default function PatientDetailPage() {
         <div className="flex gap-2">
           <Button
             variant="outline"
-            onClick={() => router.push(`/patients/${patient.id}/edit`)}
+            onClick={handleEditPatient}
           >
             <Edit className="h-4 w-4 mr-2" />
             Edit
           </Button>
+          
+          {/* Certificate Generation Dropdown */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline">
+                <FileCheck className="h-4 w-4 mr-2" />
+                Generate Certificate
+                <ChevronDown className="h-4 w-4 ml-2" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuItem onClick={() => console.log('Generate Medical Clearance')}>
+                <FileCheck className="h-4 w-4 mr-2" />
+                Medical Clearance
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => console.log('Generate Sick Leave')}>
+                <FileText className="h-4 w-4 mr-2" />
+                Sick Leave Certificate
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => console.log('Generate Fitness Certificate')}>
+                <Heart className="h-4 w-4 mr-2" />
+                Fitness Certificate
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => console.log('Generate Medical Report')}>
+                <Stethoscope className="h-4 w-4 mr-2" />
+                Medical Report
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => console.log('Generate Prescription')}>
+                <Pill className="h-4 w-4 mr-2" />
+                Prescription
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
           <Button onClick={() => router.push(`/patients/${patient.id}/visits/new`)}>
             <FileText className="h-4 w-4 mr-2" />
             New Visit
           </Button>
         </div>
-      </div>
-
-      <div className="flex items-center gap-2">
-        <Badge variant={patient.status === PatientStatus.ACTIVE ? 'default' : 'secondary'}>
-          {patient.status}
-        </Badge>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
@@ -349,6 +410,15 @@ export default function PatientDetailPage() {
           />
         </TabsContent>
       </Tabs>
+
+      {/* Edit Patient Drawer */}
+      <PatientFormDrawer
+        open={isEditDrawerOpen}
+        onOpenChange={setIsEditDrawerOpen}
+        patient={patient || undefined}
+        onSubmit={handleUpdatePatient}
+        isLoading={updatePatient.isPending}
+      />
     </div>
   );
 }

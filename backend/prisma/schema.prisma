@@ -445,7 +445,7 @@ model Appointment {
   id        String  @id @default(cuid())
   patientId String
   patient   Patient @relation(fields: [patientId], references: [id])
-  doctorId  String
+  doctorId  String?
 
   startTime DateTime
   endTime   DateTime

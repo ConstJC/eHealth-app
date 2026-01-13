@@ -22,12 +22,12 @@ export class CreateVisitDto {
   patientId: string;
 
   @ApiProperty({
-    description: 'Visit type',
+    description: 'Visit type - can be one of the enum values or a custom string',
     enum: VisitType,
     example: VisitType.ROUTINE,
   })
-  @IsEnum(VisitType)
-  visitType: VisitType;
+  @IsString()
+  visitType: VisitType | string;
 
   @ApiPropertyOptional({
     description: 'Visit date and time',

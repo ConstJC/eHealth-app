@@ -168,6 +168,52 @@ button,
   }
 }
 
+/* Sheet/Drawer Slide Animations - GPU Accelerated */
+.animate-in {
+  animation-fill-mode: both;
+  will-change: transform, opacity;
+}
+
+.slide-in-from-right {
+  animation: slideInFromRight 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.slide-in-from-left {
+  animation: slideInFromLeft 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes slideInFromRight {
+  from {
+    transform: translate3d(100%, 0, 0);
+    opacity: 0.8;
+  }
+  to {
+    transform: translate3d(0, 0, 0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideInFromLeft {
+  from {
+    transform: translate3d(-100%, 0, 0);
+    opacity: 0.8;
+  }
+  to {
+    transform: translate3d(0, 0, 0);
+    opacity: 1;
+  }
+}
+
+/* Performance optimization for drawers */
+.transform-gpu {
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  perspective: 1000px;
+  -webkit-perspective: 1000px;
+}
+
 /* Custom Scrollbar */
 ::-webkit-scrollbar {
   width: 8px;

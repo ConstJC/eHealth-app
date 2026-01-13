@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from "react";
+import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "./button";
@@ -39,6 +40,12 @@ const Dialog = ({ open = false, onOpenChange, children }: DialogProps) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, isControlled]);
 
+  const [mounted, setMounted] = React.useState(false);
+
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
+
   React.useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden';
@@ -50,18 +57,25 @@ const Dialog = ({ open = false, onOpenChange, children }: DialogProps) => {
     };
   }, [isOpen]);
 
-  if (!isOpen) return null;
+  if (!isOpen || !mounted) return null;
 
-  return (
+  // Render dialog at document body level using portal to cover entire screen
+  return createPortal(
     <DialogContext.Provider value={{ open: isOpen, onOpenChange: setIsOpen }}>
-      <div className="fixed inset-0 z-50 flex items-center justify-center">
+      <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+        {/* Backdrop overlay - covers entire screen including navbar and sidebar */}
         <div
-          className="fixed inset-0 bg-black/50"
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity duration-300"
           onClick={() => setIsOpen(false)}
+          aria-hidden="true"
         />
-        {children}
+        {/* Modal content container - centered */}
+        <div className="relative z-[10000] w-full max-w-2xl animate-fade-in">
+          {children}
+        </div>
       </div>
-    </DialogContext.Provider>
+    </DialogContext.Provider>,
+    document.body
   );
 };
 
@@ -82,16 +96,18 @@ const DialogContent = React.forwardRef<
     <div
       ref={ref}
       className={cn(
-        "relative z-50 grid w-full max-w-lg gap-4 border bg-white p-6 shadow-lg rounded-lg",
+        "relative w-full bg-white rounded-xl shadow-2xl border border-slate-200 overflow-hidden",
+        "max-h-[90vh] flex flex-col",
         className
       )}
       {...props}
+      onClick={(e) => e.stopPropagation()}
     >
       {children}
       <Button
         variant="ghost"
         size="icon"
-        className="absolute right-4 top-4 rounded-sm"
+        className="absolute right-4 top-4 rounded-full h-8 w-8 hover:bg-slate-100 z-10"
         onClick={handleClose}
       >
         <X className="h-4 w-4" />
@@ -108,7 +124,7 @@ const DialogHeader = ({
 }: React.HTMLAttributes<HTMLDivElement>) => (
   <div
     className={cn(
-      "flex flex-col space-y-1.5 text-center sm:text-left",
+      "flex flex-col space-y-1.5 px-6 pt-6 pb-4 border-b border-slate-100 bg-slate-50/50",
       className
     )}
     {...props}

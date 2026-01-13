@@ -31,8 +31,8 @@ export class AppointmentsController {
   constructor(private readonly appointmentsService: AppointmentsService) {}
 
   @Post()
-  @Roles(Role.ADMIN, Role.RECEPTIONIST)
-  @ApiOperation({ summary: 'Schedule a new appointment' })
+  @Roles(Role.ADMIN, Role.DOCTOR, Role.NURSE, Role.RECEPTIONIST)
+  @ApiOperation({ summary: 'Schedule a new appointment or check-in patient' })
   async create(@Body() dto: CreateAppointmentDto) {
     return this.appointmentsService.create(dto);
   }

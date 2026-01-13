@@ -19,7 +19,7 @@ import {
   X,
 } from "lucide-react";
 import { useState, useMemo } from "react";
-import { usePatients, useDeletePatient, useUpdatePatientStatus } from "@/hooks/queries/use-patients";
+import { usePatients, useDeletePatient, useUpdatePatientStatus, useCreatePatient, useUpdatePatient, usePatient } from "@/hooks/queries/use-patients";
 import { LoadingSpinner } from "@/components/common/loading-spinner";
 import { Pagination } from "@/components/common/pagination";
 import {
@@ -38,6 +38,8 @@ import {
 } from "@/components/ui/select";
 import { useRouter } from "next/navigation";
 import { format } from "date-fns";
+import { PatientFormDrawer } from "@/components/features/patients/patient-form-drawer";
+import type { CreatePatientInput, UpdatePatientInput } from "@/types/patient.types";
 
 // Helper function to get initials from full name
 const getInitials = (firstName: string, lastName: string) => {
@@ -59,6 +61,10 @@ export default function PatientsPage() {
   const [itemsPerPage] = useState(10);
   const [sortField, setSortField] = useState<SortField>('createdAt');
   const [sortOrder, setSortOrder] = useState<SortOrder>('desc');
+  
+  // Drawer state
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [editingPatientId, setEditingPatientId] = useState<string | null>(null);
 
   // Fetch patients with filters
   const { data, isLoading, error, refetch } = usePatients({
@@ -68,8 +74,13 @@ export default function PatientsPage() {
     limit: itemsPerPage,
   });
 
+  // Fetch patient data when editing
+  const { data: editingPatient } = usePatient(editingPatientId || undefined);
+
   const deletePatient = useDeletePatient();
   const updateStatus = useUpdatePatientStatus();
+  const createPatient = useCreatePatient();
+  const updatePatient = useUpdatePatient();
 
   // Client-side sorting for the current page
   const sortedPatients = useMemo(() => {
@@ -188,6 +199,32 @@ export default function PatientsPage() {
 
   const hasActiveFilters = searchTerm || statusFilter !== "all" || genderFilter !== "all" || nameFilter || dateOfBirthFilter;
 
+  // Drawer handlers
+  const handleAddPatient = () => {
+    setEditingPatientId(null);
+    setIsDrawerOpen(true);
+  };
+
+  const handleEditPatient = (id: string) => {
+    setEditingPatientId(id);
+    setIsDrawerOpen(true);
+  };
+
+  const handleFormSubmit = async (data: CreatePatientInput | UpdatePatientInput) => {
+    if (editingPatientId) {
+      // Update existing patient
+      await updatePatient.mutateAsync({ id: editingPatientId, data: data as UpdatePatientInput });
+    } else {
+      // Create new patient
+      await createPatient.mutateAsync(data as CreatePatientInput);
+    }
+  };
+
+  const handleDrawerClose = () => {
+    setIsDrawerOpen(false);
+    setEditingPatientId(null);
+  };
+
   if (error) {
     return (
       <div className="flex flex-col items-center justify-center h-96">
@@ -207,7 +244,7 @@ export default function PatientsPage() {
         </div>
         <Button 
           className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-500/20 px-4 md:px-5 h-9 md:h-10 lg:h-11 rounded-xl transition-all text-sm md:text-base"
-          onClick={() => router.push('/patients/new')}
+          onClick={handleAddPatient}
         >
           <UserPlus className="mr-2 h-4 w-4 md:h-5 md:w-5" />
           Add New Patient
@@ -325,7 +362,7 @@ export default function PatientsPage() {
                 : "Start by adding your first patient"}
             </p>
             {!searchTerm && (
-              <Button className="mt-4" onClick={() => router.push('/patients/new')}>
+              <Button className="mt-4" onClick={handleAddPatient}>
                 <UserPlus className="mr-2 h-4 w-4" />
                 Add Patient
               </Button>
@@ -446,7 +483,7 @@ export default function PatientsPage() {
                                 <Eye className="mr-2 h-3.5 w-3.5 md:h-4 md:w-4" />
                                 View Details
                               </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => router.push(`/patients/${patient.id}/edit`)}>
+                              <DropdownMenuItem onClick={() => handleEditPatient(patient.id)}>
                                 <Edit className="mr-2 h-3.5 w-3.5 md:h-4 md:w-4" />
                                 Edit Patient
                               </DropdownMenuItem>
@@ -487,6 +524,15 @@ export default function PatientsPage() {
           </>
         )}
       </div>
+
+      {/* Patient Form Drawer */}
+      <PatientFormDrawer
+        open={isDrawerOpen}
+        onOpenChange={handleDrawerClose}
+        patient={editingPatient}
+        onSubmit={handleFormSubmit}
+        isLoading={createPatient.isPending || updatePatient.isPending}
+      />
     </div>
   );
 }
