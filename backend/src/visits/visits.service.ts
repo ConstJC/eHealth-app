@@ -219,11 +219,14 @@ export class VisitsService {
       bmi = Math.round(bmi * 10) / 10;
     }
 
+    // Extract fields that should not be updated (core identifiers)
+    const { patientId, visitType, ...updateableFields } = dto;
+
     // Update visit
     const visit = await this.prisma.visit.update({
       where: { id },
       data: {
-        ...dto,
+        ...updateableFields,
         visitDate: dto.visitDate ? new Date(dto.visitDate) : undefined,
         followUpDate: dto.followUpDate ? new Date(dto.followUpDate) : undefined,
         bmi,

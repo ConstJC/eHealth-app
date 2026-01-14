@@ -269,8 +269,8 @@ useCreatePatient() → POST /patients (Registration) ✅
 
 ---
 
-### 6. Consultation Module ✨ NEWLY IMPLEMENTED
-**Status:** ✅ **COMPLETE** - Fully Connected to Backend with TanStack Query  
+### 6. Consultation Module ✨ FULLY ENHANCED
+**Status:** ✅ **COMPLETE** - Fully Connected to Backend with Enhanced Features  
 **API Base:** `/visits`, `/certificates`
 **Page:** `/consultation`
 
@@ -278,8 +278,8 @@ useCreatePatient() → POST /patients (Registration) ✅
 ```typescript
 // Hook: hooks/queries/use-visits.ts (TanStack Query)
 useVisits({ status: 'IN_PROGRESS' }) → GET /visits?status=IN_PROGRESS ✅
-useUpdateVisit() → PATCH /visits/:id ✅
-useCompleteVisit() → PATCH /visits/:id (status: COMPLETED) ✅
+useUpdateVisit() → PUT /visits/:id ✅
+useCompleteVisit() → PATCH /visits/:id/complete ✅ (Fixed endpoint)
 
 // Certificates
 useCertificates().createCertificate() ✅
@@ -288,23 +288,39 @@ useCertificates().downloadCertificate() ✅
 
 **Features Implemented:**
 - ✅ Real-time consultation queue (visits in progress)
-- ✅ Display patient vitals from triage
-- ✅ **SOAP Notes** (Subjective, Objective, Assessment, Plan) - **CONNECTED TO BACKEND**
-- ✅ **Save SOAP notes** with auto-save functionality
-- ✅ **Complete visit** workflow
+- ✅ Display patient vitals from triage (flat structure mapping)
+- ✅ **Chief Complaint** field (required for completion)
+- ✅ **SOAP Notes** (Subjective, Objective, Assessment, Plan) - **FULLY CONNECTED**
+- ✅ **Auto-save SOAP notes** with 2-second debounce
+- ✅ **Manual save** with visual feedback
+- ✅ **Complete visit** workflow with proper endpoint (`/visits/:id/complete`)
+- ✅ **Visit locking** - prevents editing after completion
 - ✅ Generate medical certificates (SICK_LEAVE, FIT_TO_WORK, MEDICAL_CLEARANCE)
 - ✅ Download certificates as PDF
-- ✅ Real-time updates
-- ✅ TanStack Query for caching
-- ✅ Optimistic updates on SOAP notes
-- ✅ Form validation before completion
+- ✅ Real-time updates (30-second refresh)
+- ✅ TanStack Query for caching and optimistic updates
+- ✅ Form validation before completion (Chief Complaint, Assessment, Plan required)
+- ✅ Proper error handling and rollback
+- ✅ Data structure matches backend (flat fields, not nested)
+
+**Recent Enhancements (January 13, 2026):**
+- ✅ Fixed `useCompleteVisit` to use correct endpoint `/visits/:id/complete`
+- ✅ Updated Visit interface to match backend response structure
+- ✅ Added Chief Complaint field to SOAP notes
+- ✅ Implemented auto-save with debouncing (2 seconds)
+- ✅ Added save status indicator (timestamp display)
+- ✅ Added visit locking support (prevents editing locked visits)
+- ✅ Fixed vitals display to use flat structure from backend
+- ✅ Updated `useUpdateVisit` to use PUT method (matches backend)
+- ✅ Fixed data mapping for nested response structure (`{ data: [] }`)
 
 **Files:**
-- `app/(core)/consultation/page.tsx` ✅ Fully connected
-- `hooks/queries/use-visits.ts` ✅ Implemented with TanStack Query
+- `app/(core)/consultation/page.tsx` ✅ Fully connected with enhancements
+- `hooks/queries/use-visits.ts` ✅ Updated with correct endpoints and structure
 - `hooks/use-certificates.ts` ✅ Implemented
 
-**Completed:** January 13, 2026
+**Completed:** January 13, 2026  
+**Last Enhanced:** January 13, 2026 (Auto-save, Chief Complaint, Locking)
 
 ---
 
@@ -862,11 +878,15 @@ Reports:               ░░░░░░░░░░░░░░░░░░░
    - ~~Remove mock INTAKE_QUEUE~~ ✅
    - **Completed:** January 13, 2026
 
-4. ~~**Complete Consultation Workflow**~~ ✅ **COMPLETED**
-   - ~~Connect SOAP notes to backend~~ ✅
-   - ~~Implement visit completion~~ ✅
-   - ~~Display vitals and patient data~~ ✅
-   - **Completed:** January 13, 2026
+4. ~~**Complete Consultation Workflow**~~ ✅ **ENHANCED**
+    - ~~Connect SOAP notes to backend~~ ✅
+    - ~~Implement visit completion~~ ✅
+    - ~~Display vitals and patient data~~ ✅
+    - ~~Add Chief Complaint field~~ ✅
+    - ~~Implement auto-save functionality~~ ✅
+    - ~~Fix complete visit endpoint~~ ✅
+    - **Completed:** January 13, 2026
+    - **Enhanced:** January 13, 2026
 
 ### Medium-term (1 Month)
 
@@ -974,8 +994,9 @@ The frontend has made **outstanding progress** with **65% of modules now fully c
 - ✅ **TanStack Query Integration** - Modern data fetching with caching
 - ✅ **Patients Module Complete** - Real data, filters, sorting, pagination
 - ✅ **Dashboard Module Complete** - Real stats, queue, and activity
-- ✅ **Visits/Triage Module Complete** - Real intake queue, vitals recording ✨ **NEW**
-- ✅ **Consultation Module Complete** - SOAP notes, visit completion ✨ **NEW**
+- ✅ **Visits/Triage Module Complete** - Real intake queue, vitals recording ✨
+- ✅ **Consultation Module Enhanced** - SOAP notes with auto-save, Chief Complaint, visit locking ✨ **ENHANCED**
+- ✅ **Auto-save Functionality** - SOAP notes auto-save after 2 seconds of inactivity ✨ **NEW**
 - ✅ **Responsive Design** - Mobile/tablet/desktop optimized (Patients, Dashboard, Visits, Consultation)
 - ✅ **UI Components Fixed** - Avatar and Select components use Radix UI
 - ✅ **Mock Data Reduced** - Down to 3 pages (from 6)! ✨
@@ -989,8 +1010,10 @@ The frontend has made **outstanding progress** with **65% of modules now fully c
 - ✅ Modern UI with shadcn/ui + Radix UI
 - ✅ **Fully functional Patients management** ✨
 - ✅ **Fully functional Dashboard with real-time data** ✨
-- ✅ **Complete clinical workflow (Triage → Consultation → Completion)** ✨ **NEW**
-- ✅ **SOAP notes fully integrated** ✨ **NEW**
+- ✅ **Complete clinical workflow (Triage → Consultation → Completion)** ✨
+- ✅ **SOAP notes fully integrated with auto-save** ✨ **ENHANCED**
+- ✅ **Chief Complaint field added** ✨ **NEW**
+- ✅ **Visit locking support** ✨ **NEW**
 - ✅ **Responsive design implemented** ✨
 
 **Remaining Work:**

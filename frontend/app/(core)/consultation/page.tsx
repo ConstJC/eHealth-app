@@ -16,12 +16,13 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useVisits, useUpdateVisit, useCompleteVisit } from "@/hooks/queries/use-visits";
 import { useCertificates } from "@/hooks/use-certificates";
 import { LoadingSpinner } from "@/components/common/loading-spinner";
 import { format } from "date-fns";
 import { toast } from "sonner";
+import { Textarea } from "@/components/ui/textarea";
 
 export default function ConsultationPage() {
   const [activeTab, setActiveTab] = useState("soap");
@@ -29,11 +30,16 @@ export default function ConsultationPage() {
   const [selectedCertType, setSelectedCertType] = useState<string | null>(null);
   
   const [soapData, setSoapData] = useState({
+    chiefComplaint: '',
     subjective: '',
     objective: '',
     assessment: '',
     plan: '',
   });
+  
+  const autoSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [isAutoSaving, setIsAutoSaving] = useState(false);
+  const [lastSaved, setLastSaved] = useState<Date | null>(null);
 
   const [certFormData, setCertFormData] = useState({
     diagnosis: "",
@@ -63,42 +69,99 @@ export default function ConsultationPage() {
 
   // Load SOAP data when visit is selected
   useEffect(() => {
-    if (selectedVisit?.soap) {
+    if (selectedVisit) {
       setSoapData({
-        subjective: selectedVisit.soap.subjective || '',
-        objective: selectedVisit.soap.objective || '',
-        assessment: selectedVisit.soap.assessment || '',
-        plan: selectedVisit.soap.plan || '',
+        chiefComplaint: selectedVisit.chiefComplaint || '',
+        subjective: selectedVisit.subjective || '',
+        objective: selectedVisit.objective || '',
+        assessment: selectedVisit.assessment || '',
+        plan: selectedVisit.plan || '',
       });
+      setLastSaved(null);
     } else {
       setSoapData({
+        chiefComplaint: '',
         subjective: '',
         objective: '',
         assessment: '',
         plan: '',
       });
+      setLastSaved(null);
     }
   }, [selectedVisit]);
+  
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (autoSaveTimeoutRef.current) {
+        clearTimeout(autoSaveTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const handleSoapChange = (field: keyof typeof soapData, value: string) => {
     setSoapData(prev => ({ ...prev, [field]: value }));
+    
+    // Auto-save after 2 seconds of inactivity
+    if (autoSaveTimeoutRef.current) {
+      clearTimeout(autoSaveTimeoutRef.current);
+    }
+    
+    autoSaveTimeoutRef.current = setTimeout(() => {
+      handleAutoSave();
+    }, 2000);
   };
+
+  const handleAutoSave = useCallback(async () => {
+    if (!selectedVisitId || !selectedVisit) return;
+    
+    // Don't auto-save if visit is locked
+    if (selectedVisit.isLocked) return;
+    
+    setIsAutoSaving(true);
+    try {
+      await updateVisit.mutateAsync({
+        id: selectedVisitId,
+        data: soapData
+      });
+      setLastSaved(new Date());
+    } catch (err) {
+      console.error('Failed to auto-save SOAP notes:', err);
+    } finally {
+      setIsAutoSaving(false);
+    }
+  }, [selectedVisitId, soapData, updateVisit, selectedVisit]);
 
   const handleSaveSOAP = async () => {
     if (!selectedVisitId) return;
     
+    if (autoSaveTimeoutRef.current) {
+      clearTimeout(autoSaveTimeoutRef.current);
+    }
+    
+    setIsAutoSaving(true);
     try {
       await updateVisit.mutateAsync({
         id: selectedVisitId,
-        data: { soap: soapData }
+        data: soapData
       });
+      setLastSaved(new Date());
+      toast.success('SOAP notes saved successfully!');
     } catch (err) {
       console.error('Failed to save SOAP notes:', err);
+    } finally {
+      setIsAutoSaving(false);
     }
   };
 
   const handleCompleteVisit = async () => {
     if (!selectedVisitId) return;
+    
+    // Validate required fields
+    if (!soapData.chiefComplaint) {
+      toast.error('Chief complaint is required to complete the visit.');
+      return;
+    }
     
     if (!soapData.assessment || !soapData.plan) {
       toast.error('Please complete at least Assessment and Plan before completing the visit.');
@@ -106,10 +169,15 @@ export default function ConsultationPage() {
     }
 
     try {
+      // Clear any pending auto-save
+      if (autoSaveTimeoutRef.current) {
+        clearTimeout(autoSaveTimeoutRef.current);
+      }
+      
       // Save SOAP notes first
       await updateVisit.mutateAsync({
         id: selectedVisitId,
-        data: { soap: soapData }
+        data: soapData
       });
 
       // Then complete the visit
@@ -235,10 +303,12 @@ export default function ConsultationPage() {
                     <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-200 border-none shadow-none font-semibold">Active</Badge>
                   </h1>
                   <div className="flex items-center gap-4 text-sm text-slate-500 mt-1">
-                    <span className="flex items-center gap-1.5">
-                      <User className="h-3.5 w-3.5" /> 
-                      {new Date().getFullYear() - new Date(selectedVisit.patient.dateOfBirth).getFullYear()} Years, {selectedVisit.patient.gender}
-                    </span>
+                    {selectedVisit.patient.dateOfBirth && (
+                      <span className="flex items-center gap-1.5">
+                        <User className="h-3.5 w-3.5" /> 
+                        {new Date().getFullYear() - new Date(selectedVisit.patient.dateOfBirth).getFullYear()} Years{selectedVisit.patient.gender && `, ${selectedVisit.patient.gender}`}
+                      </span>
+                    )}
                     <span className="flex items-center gap-1.5">
                       <HistoryIcon className="h-3.5 w-3.5" /> 
                       Visit Date: {format(new Date(selectedVisit.visitDate), "MMM dd, yyyy")}
@@ -246,19 +316,25 @@ export default function ConsultationPage() {
                   </div>
                 </div>
               </div>
-              <div className="flex gap-2">
+                  <div className="flex items-center gap-3">
+                <div className="flex flex-col items-end text-xs text-slate-500">
+                  {isAutoSaving && <span className="text-blue-600">Saving...</span>}
+                  {lastSaved && !isAutoSaving && (
+                    <span>Saved {format(lastSaved, 'HH:mm:ss')}</span>
+                  )}
+                </div>
                 <Button 
                   variant="outline" 
                   className="text-slate-600 border-slate-200 hover:bg-slate-50"
                   onClick={handleSaveSOAP}
-                  disabled={updateVisit.isPending}
+                  disabled={updateVisit.isPending || selectedVisit?.isLocked}
                 >
                   {updateVisit.isPending ? <LoadingSpinner /> : 'Save Notes'}
                 </Button>
                 <Button 
                   className="bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-500/20"
                   onClick={handleCompleteVisit}
-                  disabled={completeVisit.isPending}
+                  disabled={completeVisit.isPending || selectedVisit?.isLocked}
                 >
                   <CheckCircle2 className="mr-2 h-4 w-4" />
                   {completeVisit.isPending ? 'Completing...' : 'Complete Session'}
@@ -280,41 +356,41 @@ export default function ConsultationPage() {
                   <div className="grid grid-cols-2 gap-4">
                     <VitalDisplay 
                       label="BP" 
-                      value={selectedVisit.vitals?.bpSystolic && selectedVisit.vitals?.bpDiastolic 
-                        ? `${selectedVisit.vitals.bpSystolic}/${selectedVisit.vitals.bpDiastolic}` 
+                      value={selectedVisit.bloodPressureSystolic && selectedVisit.bloodPressureDiastolic 
+                        ? `${selectedVisit.bloodPressureSystolic}/${selectedVisit.bloodPressureDiastolic}` 
                         : 'N/A'} 
                       unit="mmHg" 
                     />
                     <VitalDisplay 
                       label="HR" 
-                      value={selectedVisit.vitals?.heartRate?.toString() || 'N/A'} 
+                      value={selectedVisit.heartRate?.toString() || 'N/A'} 
                       unit="bpm" 
                     />
                     <VitalDisplay 
                       label="Temp" 
-                      value={selectedVisit.vitals?.temperature?.toString() || 'N/A'} 
+                      value={selectedVisit.temperature?.toString() || 'N/A'} 
                       unit="°C" 
                     />
                     <VitalDisplay 
                       label="Weight" 
-                      value={selectedVisit.vitals?.weight?.toString() || 'N/A'} 
+                      value={selectedVisit.weight?.toString() || 'N/A'} 
                       unit="kg" 
                     />
                     <VitalDisplay 
                       label="Height" 
-                      value={selectedVisit.vitals?.height?.toString() || 'N/A'} 
+                      value={selectedVisit.height?.toString() || 'N/A'} 
                       unit="cm" 
                     />
                     <VitalDisplay 
                       label="BMI" 
-                      value={calculateBMI(selectedVisit.vitals?.weight, selectedVisit.vitals?.height) || 'N/A'} 
+                      value={selectedVisit.bmi?.toString() || calculateBMI(selectedVisit.weight, selectedVisit.height) || 'N/A'} 
                       unit="" 
                     />
                   </div>
-                  {selectedVisit.vitals?.notes && (
+                  {selectedVisit.notes && (
                     <div className="mt-4 p-3 bg-white rounded-lg border border-blue-100">
                       <p className="text-xs font-semibold text-slate-600 mb-1">Nurse Notes:</p>
-                      <p className="text-sm text-slate-700">{selectedVisit.vitals.notes}</p>
+                      <p className="text-sm text-slate-700">{selectedVisit.notes}</p>
                     </div>
                   )}
                 </Card>
@@ -356,16 +432,38 @@ export default function ConsultationPage() {
 
                   <div className="flex-1 overflow-y-auto bg-slate-50/30 p-6">
                     <TabsContent value="soap" className="mt-0 space-y-6 h-full">
+                      {selectedVisit?.isLocked && (
+                        <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-lg flex items-center gap-2">
+                          <ShieldCheck className="h-4 w-4 text-amber-600" />
+                          <span className="text-sm text-amber-800 font-medium">This visit is locked and cannot be edited.</span>
+                        </div>
+                      )}
+                      
+                      <div className="space-y-2">
+                        <label className="text-sm font-semibold text-slate-700 flex items-center gap-2">
+                          <span className="w-6 h-6 rounded-md bg-purple-100 text-purple-700 flex items-center justify-center text-xs font-bold">CC</span>
+                          Chief Complaint <span className="text-red-500">*</span>
+                        </label>
+                        <Textarea 
+                          className="w-full h-20 rounded-xl border-slate-200 bg-white p-4 text-sm focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all shadow-sm resize-none"
+                          placeholder="Main reason for visit..."
+                          value={soapData.chiefComplaint}
+                          onChange={(e) => handleSoapChange('chiefComplaint', e.target.value)}
+                          disabled={selectedVisit?.isLocked}
+                        />
+                      </div>
+
                       <div className="space-y-2">
                         <label className="text-sm font-semibold text-slate-700 flex items-center gap-2">
                           <span className="w-6 h-6 rounded-md bg-blue-100 text-blue-700 flex items-center justify-center text-xs font-bold">S</span>
-                          Subjective (Chief Complaint)
+                          Subjective (History & Symptoms)
                         </label>
-                        <textarea 
+                        <Textarea 
                           className="w-full h-24 rounded-xl border-slate-200 bg-white p-4 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-sm resize-none"
                           placeholder="Patient reports..."
                           value={soapData.subjective}
                           onChange={(e) => handleSoapChange('subjective', e.target.value)}
+                          disabled={selectedVisit?.isLocked}
                         />
                       </div>
 
@@ -374,27 +472,29 @@ export default function ConsultationPage() {
                           <span className="w-6 h-6 rounded-md bg-indigo-100 text-indigo-700 flex items-center justify-center text-xs font-bold">O</span>
                           Objective (Observations)
                         </label>
-                        <textarea 
+                        <Textarea 
                           className="w-full h-24 rounded-xl border-slate-200 bg-white p-4 text-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all shadow-sm resize-none"
                           placeholder="Physical exam findings..."
                           value={soapData.objective}
                           onChange={(e) => handleSoapChange('objective', e.target.value)}
+                          disabled={selectedVisit?.isLocked}
                         />
                       </div>
 
                       <div className="space-y-2">
                         <label className="text-sm font-semibold text-slate-700 flex items-center gap-2">
                           <span className="w-6 h-6 rounded-md bg-emerald-100 text-emerald-700 flex items-center justify-center text-xs font-bold">A</span>
-                          Assessment (Diagnosis)
+                          Assessment (Diagnosis) <span className="text-red-500">*</span>
                         </label>
                         <div className="relative">
                           <AlertCircle className="absolute left-3 top-3 h-4 w-4 text-emerald-600" />
                           <input 
                             type="text"
-                            className="w-full h-11 pl-10 pr-4 rounded-xl border-slate-200 bg-white text-sm font-medium focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all shadow-sm"
+                            className="w-full h-11 pl-10 pr-4 rounded-xl border-slate-200 bg-white text-sm font-medium focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all shadow-sm disabled:bg-slate-50 disabled:cursor-not-allowed"
                             placeholder="Enter diagnosis (ICD-10 optional)..."
                             value={soapData.assessment}
                             onChange={(e) => handleSoapChange('assessment', e.target.value)}
+                            disabled={selectedVisit?.isLocked}
                           />
                         </div>
                       </div>
@@ -402,13 +502,14 @@ export default function ConsultationPage() {
                       <div className="space-y-2">
                         <label className="text-sm font-semibold text-slate-700 flex items-center gap-2">
                           <span className="w-6 h-6 rounded-md bg-orange-100 text-orange-700 flex items-center justify-center text-xs font-bold">P</span>
-                          Plan (Treatment)
+                          Plan (Treatment) <span className="text-red-500">*</span>
                         </label>
-                        <textarea 
-                          className="w-full h-24 rounded-xl border-slate-200 bg-white p-4 text-sm focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all shadow-sm resize-none"
+                        <Textarea 
+                          className="w-full h-24 rounded-xl border-slate-200 bg-white p-4 text-sm focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all shadow-sm resize-none disabled:bg-slate-50 disabled:cursor-not-allowed"
                           placeholder="Medication, therapy, advice..."
                           value={soapData.plan}
                           onChange={(e) => handleSoapChange('plan', e.target.value)}
+                          disabled={selectedVisit?.isLocked}
                         />
                       </div>
 

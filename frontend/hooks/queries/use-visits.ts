@@ -6,43 +6,56 @@ export interface Visit {
   id: string;
   patientId: string;
   doctorId: string;
-  appointmentId?: string;
   visitDate: string;
   visitType: string;
   status: 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED';
+  // Vital signs (flat structure from backend)
+  bloodPressureSystolic?: number;
+  bloodPressureDiastolic?: number;
+  heartRate?: number;
+  respiratoryRate?: number;
+  temperature?: number;
+  oxygenSaturation?: number;
+  weight?: number;
+  height?: number;
+  bmi?: number;
+  painScale?: number;
+  // SOAP notes (flat structure from backend)
+  chiefComplaint?: string;
+  subjective?: string;
+  objective?: string;
+  assessment?: string;
+  plan?: string;
+  // Diagnosis
+  primaryDiagnosis?: string;
+  secondaryDiagnoses?: string[];
+  icdCodes?: string[];
+  // Additional
+  notes?: string;
+  followUpDate?: string;
+  followUpReason?: string;
+  isLocked?: boolean;
+  lockedAt?: string;
+  lockedBy?: string;
+  // Relations
   patient: {
     id: string;
     patientId: string;
     firstName: string;
     lastName: string;
     middleName?: string;
-    gender: string;
-    dateOfBirth: string;
+    gender?: string;
+    dateOfBirth?: string;
     phone?: string;
     email?: string;
+    allergies?: string[];
+    chronicConditions?: string[];
   };
-  appointment?: {
+  doctor?: {
     id: string;
-    startTime: string;
-    endTime: string;
-    reason?: string;
-    status: string;
-  };
-  vitals?: {
-    id?: string;
-    bpSystolic?: number;
-    bpDiastolic?: number;
-    heartRate?: number;
-    temperature?: number;
-    weight?: number;
-    height?: number;
-    notes?: string;
-  };
-  soap?: {
-    subjective?: string;
-    objective?: string;
-    assessment?: string;
-    plan?: string;
+    firstName: string;
+    lastName: string;
+    email?: string;
   };
   createdAt: string;
   updatedAt: string;
@@ -50,36 +63,47 @@ export interface Visit {
 
 export interface CreateVisitInput {
   patientId: string;
-  appointmentId?: string;
   visitType: string;
-  vitals?: {
-    bpSystolic?: number;
-    bpDiastolic?: number;
-    heartRate?: number;
-    temperature?: number;
-    weight?: number;
-    height?: number;
-    notes?: string;
-  };
+  visitDate?: string;
+  chiefComplaint?: string;
+  // Vital signs
+  bloodPressureSystolic?: number;
+  bloodPressureDiastolic?: number;
+  heartRate?: number;
+  respiratoryRate?: number;
+  temperature?: number;
+  oxygenSaturation?: number;
+  weight?: number;
+  height?: number;
+  painScale?: number;
 }
 
 export interface UpdateVisitInput {
-  status?: 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED';
-  vitals?: {
-    bpSystolic?: number;
-    bpDiastolic?: number;
-    heartRate?: number;
-    temperature?: number;
-    weight?: number;
-    height?: number;
-    notes?: string;
-  };
-  soap?: {
-    subjective?: string;
-    objective?: string;
-    assessment?: string;
-    plan?: string;
-  };
+  // SOAP notes
+  chiefComplaint?: string;
+  subjective?: string;
+  objective?: string;
+  assessment?: string;
+  plan?: string;
+  // Diagnosis
+  primaryDiagnosis?: string;
+  secondaryDiagnoses?: string[];
+  icdCodes?: string[];
+  // Vital signs
+  bloodPressureSystolic?: number;
+  bloodPressureDiastolic?: number;
+  heartRate?: number;
+  respiratoryRate?: number;
+  temperature?: number;
+  oxygenSaturation?: number;
+  weight?: number;
+  height?: number;
+  painScale?: number;
+  // Follow-up
+  followUpDate?: string;
+  followUpReason?: string;
+  // Additional
+  notes?: string;
 }
 
 // Query Keys
@@ -101,8 +125,9 @@ export function useVisits(filters?: { status?: string; date?: string; patientId?
       if (filters?.date) params.append('date', filters.date);
       if (filters?.patientId) params.append('patientId', filters.patientId);
 
-      const response = await apiClient.get<Visit[]>(`/visits?${params.toString()}`);
-      return response.data;
+      const response = await apiClient.get<{ data: Visit[]; meta?: any }>(`/visits?${params.toString()}`);
+      // Backend returns { data: [], meta: {} } structure
+      return Array.isArray(response.data) ? response.data : response.data.data || [];
     },
     staleTime: 30000, // 30 seconds
     refetchInterval: 30000, // Refetch every 30 seconds for real-time updates
@@ -163,8 +188,36 @@ export function useCreateVisit() {
       toast.success('Visit created successfully! Patient sent to doctor.');
     },
     onError: (error: any) => {
-      const message = error?.response?.data?.message || 'Failed to create visit';
-      toast.error(message);
+      // Extract error message from backend response
+      let errorMessage = 'Failed to create visit';
+      
+      if (error?.response?.data) {
+        const errorData = error.response.data;
+        
+        // Handle validation errors (array of messages)
+        if (Array.isArray(errorData.message)) {
+          errorMessage = errorData.message.join(', ');
+        } 
+        // Handle single message string
+        else if (typeof errorData.message === 'string') {
+          errorMessage = errorData.message;
+        }
+        // Handle error object with field-specific errors
+        else if (typeof errorData.message === 'object') {
+          const messages = Object.values(errorData.message).flat();
+          errorMessage = messages.length > 0 
+            ? messages.join(', ')
+            : 'Validation failed. Please check your input.';
+        }
+        // Handle status text as fallback
+        else if (errorData.error) {
+          errorMessage = errorData.error;
+        }
+      } else if (error?.message) {
+        errorMessage = error.message;
+      }
+      
+      toast.error(errorMessage);
     },
   });
 }
@@ -175,7 +228,7 @@ export function useUpdateVisit() {
 
   return useMutation({
     mutationFn: async ({ id, data }: { id: string; data: UpdateVisitInput }) => {
-      const response = await apiClient.patch<Visit>(`/visits/${id}`, data);
+      const response = await apiClient.put<Visit>(`/visits/${id}`, data);
       return response.data;
     },
     onMutate: async ({ id, data }) => {
@@ -208,20 +261,19 @@ export function useUpdateVisit() {
       // Invalidate lists
       queryClient.invalidateQueries({ queryKey: visitKeys.lists() });
       
-      toast.success('Visit updated successfully!');
+      // Don't show toast for auto-saves (silent updates)
+      // toast.success('Visit updated successfully!');
     },
   });
 }
 
-// Complete visit
+// Complete visit (uses dedicated endpoint)
 export function useCompleteVisit() {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (id: string) => {
-      const response = await apiClient.patch<Visit>(`/visits/${id}`, {
-        status: 'COMPLETED',
-      });
+      const response = await apiClient.patch<Visit>(`/visits/${id}/complete`);
       return response.data;
     },
     onSuccess: (completedVisit) => {

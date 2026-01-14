@@ -70,6 +70,89 @@ export default function VisitsIntakePage() {
   const createVisit = useCreateVisit();
   const createPatient = useCreatePatient();
 
+  const validateField = (field: string, value: string, currentVitals = vitalsData): string | null => {
+    const numValue = parseFloat(value);
+    
+    switch (field) {
+      case 'bpSystolic':
+        if (!value) return null;
+        if (isNaN(numValue) || !Number.isInteger(numValue)) {
+          return 'Systolic BP must be a whole number';
+        }
+        if (numValue < 60 || numValue > 250) {
+          return 'Systolic BP must be between 60-250 mmHg';
+        }
+        // Check if systolic is higher than diastolic
+        if (currentVitals.bpDiastolic) {
+          const diastolic = parseFloat(currentVitals.bpDiastolic);
+          if (!isNaN(diastolic) && numValue <= diastolic) {
+            return 'Systolic BP must be higher than Diastolic BP';
+          }
+        }
+        return null;
+        
+      case 'bpDiastolic':
+        if (!value) return null;
+        if (isNaN(numValue) || !Number.isInteger(numValue)) {
+          return 'Diastolic BP must be a whole number';
+        }
+        if (numValue < 40 || numValue > 150) {
+          return 'Diastolic BP must be between 40-150 mmHg';
+        }
+        // Check if diastolic is lower than systolic
+        if (currentVitals.bpSystolic) {
+          const systolic = parseFloat(currentVitals.bpSystolic);
+          if (!isNaN(systolic) && systolic <= numValue) {
+            return 'Diastolic BP must be lower than Systolic BP';
+          }
+        }
+        return null;
+        
+      case 'heartRate':
+        if (!value) return null;
+        if (isNaN(numValue) || !Number.isInteger(numValue)) {
+          return 'Heart rate must be a whole number';
+        }
+        if (numValue < 30 || numValue > 200) {
+          return 'Heart rate must be between 30-200 bpm';
+        }
+        return null;
+        
+      case 'temperature':
+        if (!value) return null;
+        if (isNaN(numValue)) {
+          return 'Temperature must be a valid number';
+        }
+        if (numValue < 30 || numValue > 45) {
+          return 'Temperature must be between 30-45°C';
+        }
+        return null;
+        
+      case 'weight':
+        if (!value) return null;
+        if (isNaN(numValue)) {
+          return 'Weight must be a valid number';
+        }
+        if (numValue < 1 || numValue > 500) {
+          return 'Weight must be between 1-500 kg';
+        }
+        return null;
+        
+      case 'height':
+        if (!value) return null;
+        if (isNaN(numValue)) {
+          return 'Height must be a valid number';
+        }
+        if (numValue < 30 || numValue > 250) {
+          return 'Height must be between 30-250 cm';
+        }
+        return null;
+        
+      default:
+        return null;
+    }
+  };
+
   const handleVitalChange = (field: string, value: string) => {
     setVitalsData(prev => ({ ...prev, [field]: value }));
     // Clear validation error for this field when user starts typing
@@ -82,20 +165,65 @@ export default function VisitsIntakePage() {
     }
   };
 
+  const handleVitalBlur = (field: string, value: string) => {
+    // Use updated vitals data for validation
+    const updatedVitals = { ...vitalsData, [field]: value };
+    const error = validateField(field, value, updatedVitals);
+    
+    if (error) {
+      setValidationErrors(prev => ({ ...prev, [field]: error }));
+    } else {
+      setValidationErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors[field];
+        return newErrors;
+      });
+    }
+    
+    // Re-validate related fields (e.g., BP systolic/diastolic)
+    if (field === 'bpSystolic' && updatedVitals.bpDiastolic) {
+      const diastolicError = validateField('bpDiastolic', updatedVitals.bpDiastolic, updatedVitals);
+      if (diastolicError) {
+        setValidationErrors(prev => ({ ...prev, bpDiastolic: diastolicError }));
+      } else {
+        setValidationErrors(prev => {
+          const newErrors = { ...prev };
+          delete newErrors.bpDiastolic;
+          return newErrors;
+        });
+      }
+    } else if (field === 'bpDiastolic' && updatedVitals.bpSystolic) {
+      const systolicError = validateField('bpSystolic', updatedVitals.bpSystolic, updatedVitals);
+      if (systolicError) {
+        setValidationErrors(prev => ({ ...prev, bpSystolic: systolicError }));
+      } else {
+        setValidationErrors(prev => {
+          const newErrors = { ...prev };
+          delete newErrors.bpSystolic;
+          return newErrors;
+        });
+      }
+    }
+  };
+
   const validateVitals = (): boolean => {
     const errors: Record<string, string> = {};
 
-    // Blood Pressure Validation
+    // Blood Pressure Validation - Match backend constraints exactly (60-250 for systolic, 40-150 for diastolic)
     if (vitalsData.bpSystolic) {
       const systolic = parseFloat(vitalsData.bpSystolic);
-      if (isNaN(systolic) || systolic < 70 || systolic > 250) {
-        errors.bpSystolic = 'Systolic BP must be between 70-250 mmHg';
+      if (isNaN(systolic) || !Number.isInteger(systolic)) {
+        errors.bpSystolic = 'Systolic BP must be a whole number';
+      } else if (systolic < 60 || systolic > 250) {
+        errors.bpSystolic = 'Systolic BP must be between 60-250 mmHg';
       }
     }
 
     if (vitalsData.bpDiastolic) {
       const diastolic = parseFloat(vitalsData.bpDiastolic);
-      if (isNaN(diastolic) || diastolic < 40 || diastolic > 150) {
+      if (isNaN(diastolic) || !Number.isInteger(diastolic)) {
+        errors.bpDiastolic = 'Diastolic BP must be a whole number';
+      } else if (diastolic < 40 || diastolic > 150) {
         errors.bpDiastolic = 'Diastolic BP must be between 40-150 mmHg';
       }
     }
@@ -110,35 +238,43 @@ export default function VisitsIntakePage() {
       }
     }
 
-    // Heart Rate Validation
+    // Heart Rate Validation - Match backend constraints (30-200)
     if (vitalsData.heartRate) {
       const hr = parseFloat(vitalsData.heartRate);
-      if (isNaN(hr) || hr < 30 || hr > 220) {
-        errors.heartRate = 'Heart rate must be between 30-220 bpm';
+      if (isNaN(hr) || !Number.isInteger(hr)) {
+        errors.heartRate = 'Heart rate must be a whole number';
+      } else if (hr < 30 || hr > 200) {
+        errors.heartRate = 'Heart rate must be between 30-200 bpm';
       }
     }
 
-    // Temperature Validation
+    // Temperature Validation - Match backend constraints (30-45)
     if (vitalsData.temperature) {
       const temp = parseFloat(vitalsData.temperature);
-      if (isNaN(temp) || temp < 30 || temp > 45) {
+      if (isNaN(temp)) {
+        errors.temperature = 'Temperature must be a valid number';
+      } else if (temp < 30 || temp > 45) {
         errors.temperature = 'Temperature must be between 30-45°C';
       }
     }
 
-    // Weight Validation
+    // Weight Validation - Match backend constraints (1-500)
     if (vitalsData.weight) {
       const weight = parseFloat(vitalsData.weight);
-      if (isNaN(weight) || weight < 1 || weight > 500) {
+      if (isNaN(weight)) {
+        errors.weight = 'Weight must be a valid number';
+      } else if (weight < 1 || weight > 500) {
         errors.weight = 'Weight must be between 1-500 kg';
       }
     }
 
-    // Height Validation
+    // Height Validation - Match backend constraints (30-250)
     if (vitalsData.height) {
       const height = parseFloat(vitalsData.height);
-      if (isNaN(height) || height < 50 || height > 250) {
-        errors.height = 'Height must be between 50-250 cm';
+      if (isNaN(height)) {
+        errors.height = 'Height must be a valid number';
+      } else if (height < 30 || height > 250) {
+        errors.height = 'Height must be between 30-250 cm';
       }
     }
 
@@ -167,7 +303,10 @@ export default function VisitsIntakePage() {
   };
 
   const handleSendToDoctor = async () => {
-    if (!selectedPatient) return;
+    if (!selectedPatient) {
+      toast.error('Please select a patient first.');
+      return;
+    }
 
     // Validate visit type if "Others" is selected
     if (visitType === 'OTHERS' && !customVisitType.trim()) {
@@ -177,7 +316,12 @@ export default function VisitsIntakePage() {
 
     // Validate vitals before submission
     if (!validateVitals()) {
-      toast.error('Please correct the validation errors before sending to doctor.');
+      const errorMessages = Object.values(validationErrors);
+      if (errorMessages.length > 0) {
+        toast.error(`Validation errors: ${errorMessages[0]}${errorMessages.length > 1 ? ` (+${errorMessages.length - 1} more)` : ''}`);
+      } else {
+        toast.error('Please correct the validation errors before sending to doctor.');
+      }
       return;
     }
 
@@ -185,21 +329,31 @@ export default function VisitsIntakePage() {
       // Use custom visit type if "Others" is selected, otherwise use the selected enum value
       const finalVisitType = visitType === 'OTHERS' ? customVisitType.trim() : visitType;
       
-      await createVisit.mutateAsync({
+      // Prepare data with proper type conversion - ensure integers are integers, numbers are numbers
+      const visitData = {
         patientId: selectedPatient.id,
         visitType: finalVisitType,
-        vitals: {
-          bpSystolic: vitalsData.bpSystolic ? parseFloat(vitalsData.bpSystolic) : undefined,
-          bpDiastolic: vitalsData.bpDiastolic ? parseFloat(vitalsData.bpDiastolic) : undefined,
-          heartRate: vitalsData.heartRate ? parseFloat(vitalsData.heartRate) : undefined,
-          temperature: vitalsData.temperature ? parseFloat(vitalsData.temperature) : undefined,
-          weight: vitalsData.weight ? parseFloat(vitalsData.weight) : undefined,
-          height: vitalsData.height ? parseFloat(vitalsData.height) : undefined,
-          notes: vitalsData.notes || undefined,
-        },
+        chiefComplaint: vitalsData.notes?.trim() || undefined,
+        // Convert to integers for BP and heart rate (backend expects IsInt)
+        bloodPressureSystolic: vitalsData.bpSystolic ? Math.round(parseFloat(vitalsData.bpSystolic)) : undefined,
+        bloodPressureDiastolic: vitalsData.bpDiastolic ? Math.round(parseFloat(vitalsData.bpDiastolic)) : undefined,
+        heartRate: vitalsData.heartRate ? Math.round(parseFloat(vitalsData.heartRate)) : undefined,
+        // Temperature, weight, height can be decimals (backend expects IsNumber)
+        temperature: vitalsData.temperature ? parseFloat(vitalsData.temperature) : undefined,
+        weight: vitalsData.weight ? parseFloat(vitalsData.weight) : undefined,
+        height: vitalsData.height ? parseFloat(vitalsData.height) : undefined,
+      };
+
+      // Remove undefined values to avoid sending them
+      Object.keys(visitData).forEach(key => {
+        if (visitData[key as keyof typeof visitData] === undefined) {
+          delete visitData[key as keyof typeof visitData];
+        }
       });
 
-      // Reset form
+      await createVisit.mutateAsync(visitData);
+
+      // Reset form on success
       setSelectedPatient(null);
       setVisitType('ROUTINE');
       setCustomVisitType('');
@@ -213,8 +367,10 @@ export default function VisitsIntakePage() {
         notes: '',
       });
       setValidationErrors({});
-    } catch (err) {
+    } catch (err: any) {
+      // Error handling is done in the mutation hook, but we log it here for debugging
       console.error('Failed to create visit:', err);
+      // The mutation hook will show the toast error
     }
   };
 
@@ -568,21 +724,37 @@ export default function VisitsIntakePage() {
                     Blood Pressure
                   </label>
                   <div className="flex gap-2 items-center">
-                    <Input 
-                      className="text-lg font-mono font-medium h-12 border-slate-200 focus:border-red-400 focus:ring-red-400/20" 
-                      placeholder="120"
-                      value={vitalsData.bpSystolic}
-                      onChange={(e) => handleVitalChange('bpSystolic', e.target.value)}
-                      type="number"
-                    />
+                    <div className="flex-1">
+                      <Input 
+                        className={`text-lg font-mono font-medium h-12 border-slate-200 focus:border-red-400 focus:ring-red-400/20 ${
+                          validationErrors.bpSystolic ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20' : ''
+                        }`}
+                        placeholder="120"
+                        value={vitalsData.bpSystolic}
+                        onChange={(e) => handleVitalChange('bpSystolic', e.target.value)}
+                        onBlur={(e) => handleVitalBlur('bpSystolic', e.target.value)}
+                        type="number"
+                      />
+                      {validationErrors.bpSystolic && (
+                        <p className="text-xs text-red-600 mt-1">{validationErrors.bpSystolic}</p>
+                      )}
+                    </div>
                     <span className="text-xl text-slate-300">/</span>
-                    <Input 
-                      className="text-lg font-mono font-medium h-12 border-slate-200 focus:border-red-400 focus:ring-red-400/20" 
-                      placeholder="80"
-                      value={vitalsData.bpDiastolic}
-                      onChange={(e) => handleVitalChange('bpDiastolic', e.target.value)}
-                      type="number"
-                    />
+                    <div className="flex-1">
+                      <Input 
+                        className={`text-lg font-mono font-medium h-12 border-slate-200 focus:border-red-400 focus:ring-red-400/20 ${
+                          validationErrors.bpDiastolic ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20' : ''
+                        }`}
+                        placeholder="80"
+                        value={vitalsData.bpDiastolic}
+                        onChange={(e) => handleVitalChange('bpDiastolic', e.target.value)}
+                        onBlur={(e) => handleVitalBlur('bpDiastolic', e.target.value)}
+                        type="number"
+                      />
+                      {validationErrors.bpDiastolic && (
+                        <p className="text-xs text-red-600 mt-1">{validationErrors.bpDiastolic}</p>
+                      )}
+                    </div>
                     <span className="text-sm text-slate-400 font-medium ml-1">mmHg</span>
                   </div>
                 </div>
@@ -601,6 +773,7 @@ export default function VisitsIntakePage() {
                       placeholder="72"
                       value={vitalsData.heartRate}
                       onChange={(e) => handleVitalChange('heartRate', e.target.value)}
+                      onBlur={(e) => handleVitalBlur('heartRate', e.target.value)}
                       type="number"
                     />
                     <span className="absolute right-4 top-3.5 text-sm text-slate-400 font-medium">bpm</span>
@@ -624,6 +797,7 @@ export default function VisitsIntakePage() {
                       placeholder="36.5"
                       value={vitalsData.temperature}
                       onChange={(e) => handleVitalChange('temperature', e.target.value)}
+                      onBlur={(e) => handleVitalBlur('temperature', e.target.value)}
                       type="number"
                       step="0.1"
                     />
@@ -648,6 +822,7 @@ export default function VisitsIntakePage() {
                       placeholder="70"
                       value={vitalsData.weight}
                       onChange={(e) => handleVitalChange('weight', e.target.value)}
+                      onBlur={(e) => handleVitalBlur('weight', e.target.value)}
                       type="number"
                       step="0.1"
                     />
@@ -672,6 +847,7 @@ export default function VisitsIntakePage() {
                       placeholder="170"
                       value={vitalsData.height}
                       onChange={(e) => handleVitalChange('height', e.target.value)}
+                      onBlur={(e) => handleVitalBlur('height', e.target.value)}
                       type="number"
                       step="0.1"
                     />
