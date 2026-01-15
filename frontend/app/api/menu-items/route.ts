@@ -4,12 +4,12 @@ import axios from 'axios';
 const BACKEND_API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4081/api/v1';
 
 export interface MenuItem {
-  id: string;
+  id: number;
   label: string;
   href: string;
   icon: string | null;
   order: number;
-  parentId: string | null;
+  parentId: number | null;
   children?: MenuItem[];
 }
 

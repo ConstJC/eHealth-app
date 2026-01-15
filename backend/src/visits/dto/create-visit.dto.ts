@@ -1,7 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
   IsString,
-  IsUUID,
   IsEnum,
   IsOptional,
   IsInt,
@@ -18,7 +17,7 @@ export class CreateVisitDto {
     description: 'Patient ID',
     example: 'clx1234567890',
   })
-  @IsUUID()
+  @IsString()
   patientId: string;
 
   @ApiProperty({

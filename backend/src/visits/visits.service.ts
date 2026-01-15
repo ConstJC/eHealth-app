@@ -24,16 +24,9 @@ export class VisitsService {
       throw new NotFoundException('Patient not found');
     }
 
-    // Handle custom visit types - if visitType is not a valid enum value, use ROUTINE and store custom in chiefComplaint or notes
-    const validVisitTypes = ['ROUTINE', 'FOLLOWUP', 'EMERGENCY', 'SPECIALIST'];
-    const isCustomVisitType = !validVisitTypes.includes(dto.visitType as string);
-    const visitTypeForDb = isCustomVisitType ? 'ROUTINE' : (dto.visitType as any);
+    // Handle custom visit types - we now allow any string in the database
+    const visitTypeForDb = dto.visitType as string;
     
-    // Store custom visit type in chiefComplaint if it's custom, preserving existing chiefComplaint
-    const chiefComplaintWithCustomType = isCustomVisitType
-      ? `[Custom Visit Type: ${dto.visitType}]${dto.chiefComplaint ? '\n' + dto.chiefComplaint : ''}`
-      : dto.chiefComplaint;
-
     // Calculate BMI if height and weight are provided
     let bmi: number | null = null;
     if (dto.height && dto.weight) {
@@ -47,7 +40,6 @@ export class VisitsService {
       data: {
         ...dto,
         visitType: visitTypeForDb,
-        chiefComplaint: chiefComplaintWithCustomType,
         doctorId,
         visitDate: dto.visitDate ? new Date(dto.visitDate) : new Date(),
         bmi,

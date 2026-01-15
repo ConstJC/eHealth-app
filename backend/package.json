@@ -25,6 +25,7 @@
     "db:generate": "prisma generate",
     "db:deploy": "prisma migrate deploy",
     "db:status": "prisma migrate status",
+    "schema:drop": "prisma db push --force-reset",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:migrate:deploy": "prisma migrate deploy",

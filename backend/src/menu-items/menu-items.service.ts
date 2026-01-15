@@ -62,7 +62,7 @@ export class MenuItemsService {
       roles: item.roleMenus.map((rm) => rm.role),
       createdAt: item.createdAt,
       updatedAt: item.updatedAt,
-    }));
+    })) as MenuItemResponse[];
   }
 
   /**
@@ -157,13 +157,13 @@ export class MenuItemsService {
         const label = item.label.toLowerCase();
         return label !== 'audit logs' && label !== 'systems';
       })
-      .sort((a, b) => a.order - b.order);
+      .sort((a, b) => a.order - b.order) as MyMenuResponse[];
   }
 
   /**
    * Get single menu item by ID
    */
-  async findOne(id: string): Promise<MenuItemResponse> {
+  async findOne(id: number): Promise<MenuItemResponse> {
     const menuItem = await this.prisma.menuItem.findFirst({
       where: {
         id,
@@ -262,7 +262,7 @@ export class MenuItemsService {
    * Update menu item
    */
   async update(
-    id: string,
+    id: number,
     updateDto: UpdateMenuItemDto,
   ): Promise<MenuItemResponse> {
     // Check if menu item exists
@@ -316,7 +316,7 @@ export class MenuItemsService {
   /**
    * Soft delete menu item
    */
-  async remove(id: string): Promise<{ message: string }> {
+  async remove(id: number): Promise<{ message: string }> {
     const menuItem = await this.prisma.menuItem.findFirst({
       where: {
         id,
@@ -342,7 +342,7 @@ export class MenuItemsService {
    * Assign menu item to a role
    */
   async assignRole(
-    menuItemId: string,
+    menuItemId: number,
     assignRoleDto: AssignRoleDto,
   ): Promise<{ message: string; roleMenu: any }> {
     // Check if menu item exists
@@ -389,7 +389,7 @@ export class MenuItemsService {
    * Remove menu item from a role
    */
   async removeRole(
-    menuItemId: string,
+    menuItemId: number,
     role: Role,
   ): Promise<{ message: string }> {
     // Check if menu item exists
@@ -432,7 +432,7 @@ export class MenuItemsService {
    * Update menu item order
    */
   async reorder(
-    id: string,
+    id: number,
     reorderDto: ReorderMenuItemDto,
   ): Promise<MenuItemResponse> {
     const menuItem = await this.prisma.menuItem.findFirst({

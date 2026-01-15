@@ -395,6 +395,15 @@ export default function VisitsIntakePage() {
     
     // If "Others" is selected, custom visit type must be provided
     if (visitType === 'OTHERS' && !customVisitType.trim()) return false;
+
+    // Required Vitals Validation
+    if (!vitalsData.bpSystolic || !vitalsData.bpDiastolic) return false;
+    if (!vitalsData.temperature) return false;
+    if (!vitalsData.weight) return false;
+    if (!vitalsData.height) return false;
+
+    // Must not have validation errors
+    if (Object.keys(validationErrors).length > 0) return false;
     
     return true;
   };
@@ -681,7 +690,7 @@ export default function VisitsIntakePage() {
                       <SelectValue placeholder="Select visit type" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="ROUTINE">Routine</SelectItem>
+                      <SelectItem value="CHECKUP">Check-up</SelectItem>
                       <SelectItem value="FOLLOWUP">Follow-up</SelectItem>
                       <SelectItem value="EMERGENCY">Emergency</SelectItem>
                       <SelectItem value="SPECIALIST">Specialist</SelectItem>
@@ -721,12 +730,12 @@ export default function VisitsIntakePage() {
                 <div className="space-y-2">
                   <label className="text-sm font-semibold text-slate-700 flex items-center gap-2">
                     <div className="p-1.5 bg-red-50 rounded text-red-600"><Heart className="h-4 w-4" /></div>
-                    Blood Pressure
+                    Blood Pressure <span className="text-red-500 ml-1">*</span>
                   </label>
                   <div className="flex gap-2 items-center">
                     <div className="flex-1">
                       <Input 
-                        className={`text-lg font-mono font-medium h-12 border-slate-200 focus:border-red-400 focus:ring-red-400/20 ${
+                        className={`text-lg font-mono font-medium h-12 border-slate-200 focus:border-indigo-400 focus:ring-indigo-400/20 ${
                           validationErrors.bpSystolic ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20' : ''
                         }`}
                         placeholder="120"
@@ -742,7 +751,7 @@ export default function VisitsIntakePage() {
                     <span className="text-xl text-slate-300">/</span>
                     <div className="flex-1">
                       <Input 
-                        className={`text-lg font-mono font-medium h-12 border-slate-200 focus:border-red-400 focus:ring-red-400/20 ${
+                        className={`text-lg font-mono font-medium h-12 border-slate-200 focus:border-indigo-400 focus:ring-indigo-400/20 ${
                           validationErrors.bpDiastolic ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20' : ''
                         }`}
                         placeholder="80"
@@ -767,7 +776,7 @@ export default function VisitsIntakePage() {
                   </label>
                   <div className="relative">
                     <Input 
-                      className={`text-lg font-mono font-medium h-12 pl-4 pr-12 border-slate-200 focus:border-rose-400 focus:ring-rose-400/20 ${
+                      className={`text-lg font-mono font-medium h-12 pl-4 pr-12 border-slate-200 focus:border-indigo-400 focus:ring-indigo-400/20 ${
                         validationErrors.heartRate ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20' : ''
                       }`}
                       placeholder="72"
@@ -787,11 +796,11 @@ export default function VisitsIntakePage() {
                 <div className="space-y-2">
                   <label className="text-sm font-semibold text-slate-700 flex items-center gap-2">
                     <div className="p-1.5 bg-orange-50 rounded text-orange-600"><Thermometer className="h-4 w-4" /></div>
-                    Temperature
+                    Temperature <span className="text-red-500 ml-1">*</span>
                   </label>
                   <div className="relative">
                     <Input 
-                      className={`text-lg font-mono font-medium h-12 pl-4 pr-12 border-slate-200 focus:border-orange-400 focus:ring-orange-400/20 ${
+                      className={`text-lg font-mono font-medium h-12 pl-4 pr-12 border-slate-200 focus:border-indigo-400 focus:ring-indigo-400/20 ${
                         validationErrors.temperature ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20' : ''
                       }`}
                       placeholder="36.5"
@@ -812,7 +821,7 @@ export default function VisitsIntakePage() {
                 <div className="space-y-2">
                    <label className="text-sm font-semibold text-slate-700 flex items-center gap-2">
                     <div className="p-1.5 bg-indigo-50 rounded text-indigo-600"><Weight className="h-4 w-4" /></div>
-                    Weight
+                    Weight <span className="text-red-500 ml-1">*</span>
                   </label>
                   <div className="relative">
                     <Input 
@@ -837,7 +846,7 @@ export default function VisitsIntakePage() {
                 <div className="space-y-2">
                    <label className="text-sm font-semibold text-slate-700 flex items-center gap-2">
                     <div className="p-1.5 bg-blue-50 rounded text-blue-600"><Scale className="h-4 w-4" /></div>
-                    Height
+                    Height <span className="text-red-500 ml-1">*</span>
                   </label>
                   <div className="relative">
                     <Input 

@@ -35,9 +35,11 @@ enum PatientStatus {
 
 enum VisitType {
   ROUTINE
+  CHECKUP
   FOLLOWUP
   EMERGENCY
   SPECIALIST
+  OTHER
 }
 
 enum VisitStatus {
@@ -112,7 +114,7 @@ enum LabStatus {
 // ============================================
 
 model User {
-  id                     String    @id @default(cuid())
+  id                     String    @id @default(uuid())
   email                  String    @unique
   password               String
   firstName              String
@@ -140,7 +142,7 @@ model User {
 }
 
 model RefreshToken {
-  id        String   @id @default(cuid())
+  id        String   @id @default(uuid())
   token     String   @unique
   userId    String
   expiresAt DateTime
@@ -156,7 +158,7 @@ model RefreshToken {
 }
 
 model Patient {
-  id          String   @id @default(cuid())
+  id          String   @id @default(uuid())
   patientId   String   @unique // e.g., P2024-00001
   firstName   String
   middleName  String?
@@ -214,7 +216,7 @@ model Patient {
 }
 
 model Visit {
-  id        String  @id @default(cuid())
+  id        String  @id @default(uuid())
   patientId String
   patient   Patient @relation(fields: [patientId], references: [id])
   doctorId  String
@@ -222,7 +224,7 @@ model Visit {
 
   // Visit Info
   visitDate DateTime    @default(now())
-  visitType VisitType
+  visitType String
   status    VisitStatus @default(IN_PROGRESS)
 
   // Vital Signs (recorded by nurse)
@@ -284,7 +286,7 @@ model Visit {
 }
 
 model Prescription {
-  id        String  @id @default(cuid())
+  id        String  @id @default(uuid())
   patientId String
   patient   Patient @relation(fields: [patientId], references: [id])
   visitId   String?
@@ -324,7 +326,7 @@ model Prescription {
 }
 
 model Invoice {
-  id            String  @id @default(cuid())
+  id            String  @id @default(uuid())
   invoiceNumber String  @unique // Auto-generated: INV-2024-00001
   patientId     String
   patient       Patient @relation(fields: [patientId], references: [id])
@@ -370,7 +372,7 @@ model Invoice {
 }
 
 model AuditLog {
-  id     String  @id @default(cuid())
+  id     String  @id @default(uuid())
   userId String? // Nullable for system actions
   user   User?   @relation(fields: [userId], references: [id])
 
@@ -397,13 +399,13 @@ model AuditLog {
 }
 
 model MenuItem {
-  id       String     @id @default(cuid())
+  id       Int        @id @default(autoincrement())
   label    String // Display name (e.g., "Dashboard", "Patients")
   href     String // Route path (e.g., "/dashboard", "/patients")
   icon     String? // Icon identifier (e.g., "LayoutDashboard", "Users")
   order    Int        @default(0) // Display order (lower = first)
   isActive Boolean    @default(true) // Enable/disable menu item
-  parentId String? // For nested/submenu items (future enhancement)
+  parentId Int? // For nested/submenu items (future enhancement)
   parent   MenuItem?  @relation("MenuItemHierarchy", fields: [parentId], references: [id], onDelete: SetNull)
   children MenuItem[] @relation("MenuItemHierarchy")
 
@@ -422,9 +424,9 @@ model MenuItem {
 }
 
 model RoleMenu {
-  id         String   @id @default(cuid())
+  id         Int      @id @default(autoincrement())
   role       Role // ADMIN, DOCTOR, NURSE, etc.
-  menuItemId String
+  menuItemId Int
   menuItem   MenuItem @relation(fields: [menuItemId], references: [id], onDelete: Cascade)
 
   // Optional: Role-specific overrides
@@ -442,7 +444,7 @@ model RoleMenu {
 }
 
 model Appointment {
-  id        String  @id @default(cuid())
+  id        String  @id @default(uuid())
   patientId String
   patient   Patient @relation(fields: [patientId], references: [id])
   doctorId  String?
@@ -463,7 +465,7 @@ model Appointment {
 }
 
 model MedicalCertificate {
-  id            String  @id @default(cuid())
+  id            String  @id @default(uuid())
   certificateNo String  @unique // e.g., CERT-2024-0001
   patientId     String
   patient       Patient @relation(fields: [patientId], references: [id])
@@ -490,7 +492,7 @@ model MedicalCertificate {
 }
 
 model LabRequest {
-  id        String  @id @default(cuid())
+  id        String  @id @default(uuid())
   patientId String
   patient   Patient @relation(fields: [patientId], references: [id])
   visitId   String?
@@ -516,7 +518,7 @@ model LabRequest {
 }
 
 model Referral {
-  id        String  @id @default(cuid())
+  id        String  @id @default(uuid())
   patientId String
   patient   Patient @relation(fields: [patientId], references: [id])
   visitId   String?

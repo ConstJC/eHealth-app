@@ -1,7 +1,7 @@
 import { Role } from '@prisma/client';
 
 export interface MenuItemResponse {
-  id: string;
+  id: number;
   label: string;
   href: string;
   icon: string | null;
@@ -13,12 +13,12 @@ export interface MenuItemResponse {
 }
 
 export interface MyMenuResponse {
-  id: string;
+  id: number;
   label: string;
   href: string;
   icon: string | null;
   order: number;
-  parentId: string | null;
+  parentId: number | null;
   children?: MyMenuResponse[];
 }
 

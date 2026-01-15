@@ -585,7 +585,7 @@ enum PatientStatus {
 }
 
 model User {
-  id                     String    @id @default(cuid())
+  id                     String    @id @default(uuid())
   email                  String    @unique
   password               String
   firstName              String
@@ -610,7 +610,7 @@ model User {
 }
 
 model RefreshToken {
-  id        String   @id @default(cuid())
+  id        String   @id @default(uuid())
   token     String   @unique
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -623,7 +623,7 @@ model RefreshToken {
 }
 
 model Patient {
-  id              String         @id @default(cuid())
+  id              String         @id @default(uuid())
   patientId       String         @unique  // e.g., P2024-00001
   firstName       String
   lastName        String
@@ -668,7 +668,7 @@ model Patient {
 }
 
 model Visit {
-  id              String    @id @default(cuid())
+  id              String    @id @default(uuid())
   patientId       String
   patient         Patient   @relation(fields: [patientId], references: [id])
   doctorId        String
@@ -719,7 +719,7 @@ model Visit {
 }
 
 model Prescription {
-  id              String    @id @default(cuid())
+  id              String    @id @default(uuid())
   patientId       String
   patient         Patient   @relation(fields: [patientId], references: [id])
   visitId         String?
@@ -749,7 +749,7 @@ model Prescription {
 }
 
 model Invoice {
-  id              String    @id @default(cuid())
+  id              String    @id @default(uuid())
   invoiceNumber   String    @unique
   patientId       String
   patient         Patient   @relation(fields: [patientId], references: [id])
@@ -782,7 +782,7 @@ model Invoice {
 }
 
 model AuditLog {
-  id          String   @id @default(cuid())
+  id          String   @id @default(uuid())
   userId      String
   user        User     @relation(fields: [userId], references: [id])
   

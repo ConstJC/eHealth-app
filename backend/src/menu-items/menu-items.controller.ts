@@ -10,6 +10,7 @@ import {
   UseGuards,
   HttpCode,
   HttpStatus,
+  ParseIntPipe,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -50,7 +51,7 @@ export class MenuItemsController {
       items: {
         type: 'object',
         properties: {
-          id: { type: 'string' },
+          id: { type: 'number' },
           label: { type: 'string' },
           href: { type: 'string' },
           icon: { type: 'string', nullable: true },
@@ -97,7 +98,7 @@ export class MenuItemsController {
   })
   @ApiResponse({ status: 404, description: 'Menu item not found' })
   @ApiResponse({ status: 403, description: 'Forbidden - Admin role required' })
-  async findOne(@Param('id') id: string) {
+  async findOne(@Param('id', ParseIntPipe) id: number) {
     return this.menuItemsService.findOne(id);
   }
 
@@ -133,7 +134,7 @@ export class MenuItemsController {
   })
   @ApiResponse({ status: 403, description: 'Forbidden - Admin role required' })
   async update(
-    @Param('id') id: string,
+    @Param('id', ParseIntPipe) id: number,
     @Body() updateMenuItemDto: UpdateMenuItemDto,
   ) {
     return this.menuItemsService.update(id, updateMenuItemDto);
@@ -150,7 +151,7 @@ export class MenuItemsController {
   })
   @ApiResponse({ status: 404, description: 'Menu item not found' })
   @ApiResponse({ status: 403, description: 'Forbidden - Admin role required' })
-  async remove(@Param('id') id: string) {
+  async remove(@Param('id', ParseIntPipe) id: number) {
     return this.menuItemsService.remove(id);
   }
 
@@ -169,7 +170,7 @@ export class MenuItemsController {
   })
   @ApiResponse({ status: 403, description: 'Forbidden - Admin role required' })
   async assignRole(
-    @Param('id') id: string,
+    @Param('id', ParseIntPipe) id: number,
     @Body() assignRoleDto: AssignRoleDto,
   ) {
     return this.menuItemsService.assignRole(id, assignRoleDto);
@@ -190,7 +191,10 @@ export class MenuItemsController {
     description: 'Menu item or role assignment not found',
   })
   @ApiResponse({ status: 403, description: 'Forbidden - Admin role required' })
-  async removeRole(@Param('id') id: string, @Param('role') role: Role) {
+  async removeRole(
+    @Param('id', ParseIntPipe) id: number,
+    @Param('role') role: Role,
+  ) {
     return this.menuItemsService.removeRole(id, role);
   }
 
@@ -205,7 +209,7 @@ export class MenuItemsController {
   @ApiResponse({ status: 404, description: 'Menu item not found' })
   @ApiResponse({ status: 403, description: 'Forbidden - Admin role required' })
   async reorder(
-    @Param('id') id: string,
+    @Param('id', ParseIntPipe) id: number,
     @Body() reorderDto: ReorderMenuItemDto,
   ) {
     return this.menuItemsService.reorder(id, reorderDto);

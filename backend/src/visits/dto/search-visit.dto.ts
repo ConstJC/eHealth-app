@@ -39,12 +39,11 @@ export class SearchVisitDto {
 
   @ApiPropertyOptional({
     description: 'Filter by visit type',
-    enum: VisitType,
-    example: VisitType.ROUTINE,
+    example: 'ROUTINE',
   })
   @IsOptional()
-  @IsEnum(VisitType)
-  visitType?: VisitType;
+  @IsString()
+  visitType?: string;
 
   @ApiPropertyOptional({
     description: 'Filter by start date',

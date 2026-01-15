@@ -202,7 +202,7 @@ Once the application is running, visit:
 ### User Model
 ```prisma
 model User {
-  id                      String    @id @default(cuid())
+  id                      String    @id @default(uuid())
   email                   String    @unique
   password                String
   firstName               String
@@ -223,7 +223,7 @@ model User {
 ### RefreshToken Model
 ```prisma
 model RefreshToken {
-  id        String   @id @default(cuid())
+  id        String   @id @default(uuid())
   token     String   @unique
   userId    String
   expiresAt DateTime
