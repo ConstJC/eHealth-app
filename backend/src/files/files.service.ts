@@ -7,6 +7,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import * as fs from 'fs';
 import * as path from 'path';
 import { randomUUID } from 'crypto';
+import { nowUTC } from '../common/utils/date.utils';
 
 export interface FileMetadata {
   id: string;
@@ -121,7 +122,7 @@ export class FilesService {
       mimeType: file.mimetype,
       size: file.size,
       url: this.generateFileUrl(uniqueFilename),
-      uploadedAt: new Date(),
+      uploadedAt: nowUTC(),
       uploadedBy: userId,
     };
   }

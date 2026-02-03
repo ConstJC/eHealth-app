@@ -403,6 +403,15 @@ export default function PatientsPage() {
                     </th>
                     <th className="px-3 md:px-4 lg:px-6 py-3 md:py-4 lg:py-5 text-left">
                       <button
+                        onClick={() => handleSort('dateOfBirth')}
+                        className="flex items-center font-semibold text-slate-600 text-xs md:text-sm hover:text-slate-900 transition-colors"
+                      >
+                        Birthdate
+                        {getSortIcon('dateOfBirth')}
+                      </button>
+                    </th>
+                    <th className="px-3 md:px-4 lg:px-6 py-3 md:py-4 lg:py-5 text-left">
+                      <button
                         onClick={() => handleSort('createdAt')}
                         className="flex items-center font-semibold text-slate-600 text-xs md:text-sm hover:text-slate-900 transition-colors"
                       >
@@ -455,6 +464,11 @@ export default function PatientsPage() {
                           )}
                         </td>
                         <td className="px-3 md:px-4 lg:px-6 py-3 md:py-4">
+                          <span className="font-medium text-xs md:text-sm text-slate-900">
+                            {format(new Date(patient.dateOfBirth), 'MMM dd, yyyy')}
+                          </span>
+                        </td>
+                        <td className="px-3 md:px-4 lg:px-6 py-3 md:py-4">
                           <div className="flex items-center gap-1.5 md:gap-2.5 text-slate-900">
                             <Calendar className="h-3 w-3 md:h-4 md:w-4 text-slate-400" />
                             <span className="font-medium text-xs md:text-sm">
@@ -465,8 +479,8 @@ export default function PatientsPage() {
                         <td className="px-3 md:px-4 lg:px-6 py-3 md:py-4">
                           <span className={`px-1.5 md:px-2 py-0.5 md:py-1 rounded-md text-[9px] md:text-[10px] font-semibold ${
                             patient.status === 'ACTIVE' 
-                              ? 'bg-emerald-500 text-white' 
-                              : 'bg-slate-500 text-white'
+                              ? 'bg-emerald-100 text-emerald-700 border border-emerald-200' 
+                              : 'bg-slate-100 text-slate-700 border border-slate-200'
                           }`}>
                             {patient.status}
                           </span>

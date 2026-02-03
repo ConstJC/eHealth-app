@@ -6,6 +6,7 @@ import {
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateVisitDto, UpdateVisitDto, SearchVisitDto } from './dto';
 import { Visit, Prisma, VisitStatus } from '@prisma/client';
+import { toUTC, nowUTC, createUTCDateRangeInclusive } from '../common/utils/date.utils';
 
 @Injectable()
 export class VisitsService {
@@ -41,10 +42,10 @@ export class VisitsService {
         ...dto,
         visitType: visitTypeForDb,
         doctorId,
-        visitDate: dto.visitDate ? new Date(dto.visitDate) : new Date(),
+        visitDate: dto.visitDate ? toUTC(dto.visitDate) : nowUTC(),
         bmi,
         vitalSignsRecordedBy: dto.bloodPressureSystolic ? doctorId : null,
-        vitalSignsRecordedAt: dto.bloodPressureSystolic ? new Date() : null,
+        vitalSignsRecordedAt: dto.bloodPressureSystolic ? nowUTC() : null,
       },
       include: {
         patient: {
@@ -92,10 +93,7 @@ export class VisitsService {
       ...(visitType && { visitType }),
       ...(startDate || endDate
         ? {
-            visitDate: {
-              ...(startDate && { gte: new Date(startDate) }),
-              ...(endDate && { lte: new Date(endDate) }),
-            },
+            visitDate: createUTCDateRangeInclusive(startDate, endDate),
           }
         : {}),
     };
@@ -275,7 +273,7 @@ export class VisitsService {
       data: {
         status: VisitStatus.COMPLETED,
         isLocked: true,
-        lockedAt: new Date(),
+        lockedAt: nowUTC(),
         lockedBy: userId,
       },
       include: {
@@ -336,10 +334,7 @@ export class VisitsService {
    * Get visit statistics
    */
   async getStats(startDate?: string, endDate?: string) {
-    const dateFilter = {
-      ...(startDate && { gte: new Date(startDate) }),
-      ...(endDate && { lte: new Date(endDate) }),
-    };
+    const dateFilter = createUTCDateRangeInclusive(startDate, endDate);
 
     const [total, completed, inProgress, cancelled] = await Promise.all([
       this.prisma.visit.count({

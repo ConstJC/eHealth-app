@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { SearchAuditDto } from './dto';
 import { AuditLog, AuditAction, Prisma } from '@prisma/client';
+import { createUTCDateRangeInclusive } from '../common/utils/date.utils';
 
 export interface CreateAuditLogDto {
   userId?: string;
@@ -70,10 +71,7 @@ export class AuditService {
       ...(entityId && { entityId }),
       ...(startDate &&
         endDate && {
-          createdAt: {
-            gte: new Date(startDate),
-            lte: new Date(endDate),
-          },
+          createdAt: createUTCDateRangeInclusive(startDate, endDate),
         }),
     };
 
@@ -239,10 +237,7 @@ export class AuditService {
         ...(query.entityId && { entityId: query.entityId }),
         ...(query.startDate &&
           query.endDate && {
-            createdAt: {
-              gte: new Date(query.startDate),
-              lte: new Date(query.endDate),
-            },
+            createdAt: createUTCDateRangeInclusive(query.startDate, query.endDate),
           }),
       },
       orderBy: { createdAt: 'desc' },

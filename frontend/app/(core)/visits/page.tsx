@@ -14,7 +14,10 @@ import {
   Phone,
   Mail,
   Calendar,
-  MapPin
+  MapPin,
+  Filter,
+  X,
+  ChevronDown
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -40,15 +43,22 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import type { Patient } from "@/types/patient.types";
+import type { Patient, PatientSearchParams } from "@/types/patient.types";
+import { Gender, PatientStatus } from "@/types/patient.types";
 
 export default function VisitsIntakePage() {
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
   const [isPatientDrawerOpen, setIsPatientDrawerOpen] = useState(false);
   const [isSearchDialogOpen, setIsSearchDialogOpen] = useState(false);
   const [patientSearchTerm, setPatientSearchTerm] = useState("");
+  const [showFilters, setShowFilters] = useState(false);
+  const [filters, setFilters] = useState<{
+    gender?: Gender;
+    status?: PatientStatus;
+    dateOfBirth?: string;
+  }>({});
   
-  const [visitType, setVisitType] = useState<string>('ROUTINE');
+  const [visitType, setVisitType] = useState<string>('CHECKUP');
   const [customVisitType, setCustomVisitType] = useState<string>('');
   const [vitalsData, setVitalsData] = useState({
     bpSystolic: '',
@@ -62,10 +72,34 @@ export default function VisitsIntakePage() {
 
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
 
-  const { data: searchResults, isLoading: isSearching } = usePatients({
+  const searchParams: PatientSearchParams = {
     search: patientSearchTerm.trim() || undefined,
-    limit: 10
-  });
+    limit: 50, // Fetch more to allow client-side filtering
+    ...(filters.status && { status: filters.status }),
+  };
+  
+  const { data: searchResultsRaw, isLoading: isSearching } = usePatients(searchParams);
+  
+  // Apply client-side filters (gender and dateOfBirth)
+  const searchResults = searchResultsRaw ? {
+    ...searchResultsRaw,
+    data: searchResultsRaw.data.filter(patient => {
+      // Gender filter
+      if (filters.gender && patient.gender !== filters.gender) {
+        return false;
+      }
+      
+      // Date of birth filter (exact match)
+      if (filters.dateOfBirth) {
+        const patientDob = new Date(patient.dateOfBirth).toISOString().split('T')[0];
+        if (patientDob !== filters.dateOfBirth) {
+          return false;
+        }
+      }
+      
+      return true;
+    })
+  } : undefined;
   
   const createVisit = useCreateVisit();
   const createPatient = useCreatePatient();
@@ -299,8 +333,17 @@ export default function VisitsIntakePage() {
     setSelectedPatient(patient);
     setIsSearchDialogOpen(false);
     setPatientSearchTerm("");
+    setFilters({});
+    setShowFilters(false);
     toast.success('Patient selected. You can now record vitals.');
   };
+
+  const handleClearFilters = () => {
+    setFilters({});
+    setShowFilters(false);
+  };
+
+  const hasActiveFilters = Object.values(filters).some(value => value !== undefined && value !== '');
 
   const handleSendToDoctor = async () => {
     if (!selectedPatient) {
@@ -355,7 +398,7 @@ export default function VisitsIntakePage() {
 
       // Reset form on success
       setSelectedPatient(null);
-      setVisitType('ROUTINE');
+      setVisitType('CHECKUP');
       setCustomVisitType('');
       setVitalsData({
         bpSystolic: '',
@@ -436,16 +479,98 @@ export default function VisitsIntakePage() {
                </DialogHeader>
                <div className="px-6 pt-2 pb-6 flex flex-col gap-4 overflow-hidden">
                  {/* Search Input */}
-                 <div className="relative">
-                   <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
-                   <Input
-                     placeholder="Search by name, phone, or ID..."
-                     className="pl-11 h-12 text-base border-slate-200 focus:border-blue-500 focus:ring-blue-500/20"
-                     value={patientSearchTerm}
-                     onChange={(e) => setPatientSearchTerm(e.target.value)}
-                     autoFocus
-                   />
+                 <div className="flex gap-2">
+                   <div className="relative flex-1">
+                     <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
+                     <Input
+                       placeholder="Search by name, phone, or ID..."
+                       className="pl-11 pr-4 h-12 text-base border-slate-200 focus:border-blue-500 focus:ring-blue-500/20"
+                       value={patientSearchTerm}
+                       onChange={(e) => setPatientSearchTerm(e.target.value)}
+                       autoFocus
+                     />
+                   </div>
+                   <Button
+                     type="button"
+                     variant="outline"
+                     onClick={() => setShowFilters(!showFilters)}
+                     className={`h-12 px-4 border-slate-200 ${hasActiveFilters ? 'border-blue-500 bg-blue-50 text-blue-700' : 'text-slate-700'}`}
+                   >
+                     <Filter className="h-4 w-4 mr-2" />
+                     Filters
+                     {hasActiveFilters && (
+                       <span className="ml-2 bg-blue-600 text-white rounded-full px-2 py-0.5 text-xs">
+                         {Object.values(filters).filter(v => v !== undefined && v !== '').length}
+                       </span>
+                     )}
+                     <ChevronDown className={`h-4 w-4 ml-2 transition-transform duration-200 ${showFilters ? 'rotate-180' : ''}`} />
+                   </Button>
                  </div>
+
+                 {/* Filter Section */}
+                 {showFilters && (
+                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 border border-slate-200 rounded-lg bg-slate-50/50 animate-in fade-in-0 slide-in-from-top-2 duration-200">
+                     <div className="space-y-2">
+                       <label className="text-sm font-medium text-slate-700">Gender</label>
+                       <Select
+                         value={filters.gender || 'all'}
+                         onValueChange={(value) => setFilters(prev => ({ ...prev, gender: value === 'all' ? undefined : (value as Gender) }))}
+                       >
+                         <SelectTrigger className="h-10 border-slate-200">
+                           <SelectValue placeholder="All genders" />
+                         </SelectTrigger>
+                         <SelectContent style={{ zIndex: 10001 }}>
+                           <SelectItem value="all">All genders</SelectItem>
+                           <SelectItem value={Gender.MALE}>Male</SelectItem>
+                           <SelectItem value={Gender.FEMALE}>Female</SelectItem>
+                           <SelectItem value={Gender.OTHER}>Other</SelectItem>
+                         </SelectContent>
+                       </Select>
+                     </div>
+
+                     <div className="space-y-2">
+                       <label className="text-sm font-medium text-slate-700">Status</label>
+                       <Select
+                         value={filters.status || 'all'}
+                         onValueChange={(value) => setFilters(prev => ({ ...prev, status: value === 'all' ? undefined : (value as PatientStatus) }))}
+                       >
+                         <SelectTrigger className="h-10 border-slate-200">
+                           <SelectValue placeholder="All statuses" />
+                         </SelectTrigger>
+                         <SelectContent style={{ zIndex: 10001 }}>
+                           <SelectItem value="all">All statuses</SelectItem>
+                           <SelectItem value={PatientStatus.ACTIVE}>Active</SelectItem>
+                           <SelectItem value={PatientStatus.INACTIVE}>Inactive</SelectItem>
+                         </SelectContent>
+                       </Select>
+                     </div>
+
+                     <div className="space-y-2">
+                       <label className="text-sm font-medium text-slate-700">Date of Birth</label>
+                       <Input
+                         type="date"
+                         value={filters.dateOfBirth || ''}
+                         onChange={(e) => setFilters(prev => ({ ...prev, dateOfBirth: e.target.value || undefined }))}
+                         className="h-10 border-slate-200"
+                       />
+                     </div>
+
+                     {hasActiveFilters && (
+                       <div className="md:col-span-3 flex justify-end">
+                         <Button
+                           type="button"
+                           variant="outline"
+                           size="sm"
+                           onClick={handleClearFilters}
+                           className="border-slate-200 text-slate-600 hover:bg-slate-50"
+                         >
+                           <X className="h-4 w-4 mr-2" />
+                           Clear Filters
+                         </Button>
+                       </div>
+                     )}
+                   </div>
+                 )}
                  
                  {/* Results List */}
                  <div className="flex-1 overflow-hidden flex flex-col min-h-0">
@@ -480,11 +605,10 @@ export default function VisitsIntakePage() {
                          return (
                            <div
                              key={patient.id}
-                             onClick={() => handlePatientSelect(patient)}
-                             className="group flex items-center gap-4 p-4 rounded-xl border border-slate-200 hover:border-blue-300 hover:bg-blue-50/50 cursor-pointer transition-all duration-200 hover:shadow-md"
+                             className="group flex items-center gap-4 p-4 rounded-xl border border-slate-200 hover:border-blue-300 hover:bg-blue-50/50 transition-all duration-200 hover:shadow-md"
                            >
-                             <div className="h-12 w-12 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center flex-shrink-0 shadow-sm">
-                               <span className="text-white font-bold text-lg">
+                             <div className="h-12 w-12 rounded-full bg-white border-2 border-blue-500 flex items-center justify-center shrink-0 shadow-sm">
+                               <span className="text-blue-600 font-bold text-lg">
                                  {patient.firstName.charAt(0)}{patient.lastName.charAt(0)}
                                </span>
                              </div>
@@ -496,6 +620,12 @@ export default function VisitsIntakePage() {
                                  <p className="text-sm text-slate-600">ID: {patient.patientId}</p>
                                  <span className="text-slate-300">•</span>
                                  <p className="text-sm text-slate-600">{patient.phone}</p>
+                                 {patient.dateOfBirth && (
+                                   <>
+                                     <span className="text-slate-300">•</span>
+                                     <p className="text-sm text-slate-600">{format(new Date(patient.dateOfBirth), 'MMM dd, yyyy')}</p>
+                                   </>
+                                 )}
                                  {age && (
                                    <>
                                      <span className="text-slate-300">•</span>
@@ -510,8 +640,13 @@ export default function VisitsIntakePage() {
                                  )}
                                </div>
                              </div>
-                             <Button 
-                               size="sm" 
+                             <Button
+                               type="button"
+                               size="sm"
+                               onClick={(e) => {
+                                 e.stopPropagation();
+                                 handlePatientSelect(patient);
+                               }}
                                className="bg-blue-600 hover:bg-blue-700 text-white shadow-sm group-hover:shadow-md transition-all"
                              >
                                Select
@@ -558,7 +693,7 @@ export default function VisitsIntakePage() {
               <div className="space-y-6">
                 {/* Patient Header */}
                 <div className="flex items-start gap-4 pb-4 border-b border-slate-100">
-                  <div className="h-16 w-16 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
+                  <div className="h-16 w-16 rounded-full bg-blue-100 flex items-center justify-center shrink-0">
                     <span className="text-2xl font-bold text-blue-700">
                       {selectedPatient.firstName.charAt(0)}{selectedPatient.lastName.charAt(0)}
                     </span>
@@ -735,7 +870,7 @@ export default function VisitsIntakePage() {
                   <div className="flex gap-2 items-center">
                     <div className="flex-1">
                       <Input 
-                        className={`text-lg font-mono font-medium h-12 border-slate-200 focus:border-indigo-400 focus:ring-indigo-400/20 ${
+                        className={`text-lg font-mono font-medium h-12 border-slate-200 focus:border-indigo-400 focus:ring-indigo-400/20 placeholder:text-slate-400 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield] ${
                           validationErrors.bpSystolic ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20' : ''
                         }`}
                         placeholder="120"
@@ -751,7 +886,7 @@ export default function VisitsIntakePage() {
                     <span className="text-xl text-slate-300">/</span>
                     <div className="flex-1">
                       <Input 
-                        className={`text-lg font-mono font-medium h-12 border-slate-200 focus:border-indigo-400 focus:ring-indigo-400/20 ${
+                        className={`text-lg font-mono font-medium h-12 border-slate-200 focus:border-indigo-400 focus:ring-indigo-400/20 placeholder:text-slate-300 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield] ${
                           validationErrors.bpDiastolic ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20' : ''
                         }`}
                         placeholder="80"
@@ -776,7 +911,7 @@ export default function VisitsIntakePage() {
                   </label>
                   <div className="relative">
                     <Input 
-                      className={`text-lg font-mono font-medium h-12 pl-4 pr-12 border-slate-200 focus:border-indigo-400 focus:ring-indigo-400/20 ${
+                      className={`text-lg font-mono font-medium h-12 pl-4 pr-12 border-slate-200 focus:border-indigo-400 focus:ring-indigo-400/20 placeholder:text-slate-300 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield] ${
                         validationErrors.heartRate ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20' : ''
                       }`}
                       placeholder="72"
@@ -800,7 +935,7 @@ export default function VisitsIntakePage() {
                   </label>
                   <div className="relative">
                     <Input 
-                      className={`text-lg font-mono font-medium h-12 pl-4 pr-12 border-slate-200 focus:border-indigo-400 focus:ring-indigo-400/20 ${
+                      className={`text-lg font-mono font-medium h-12 pl-4 pr-12 border-slate-200 focus:border-indigo-400 focus:ring-indigo-400/20 placeholder:text-slate-400 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield] ${
                         validationErrors.temperature ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20' : ''
                       }`}
                       placeholder="36.5"
@@ -825,7 +960,7 @@ export default function VisitsIntakePage() {
                   </label>
                   <div className="relative">
                     <Input 
-                      className={`text-lg font-mono font-medium h-12 pl-4 pr-12 border-slate-200 focus:border-indigo-400 focus:ring-indigo-400/20 ${
+                      className={`text-lg font-mono font-medium h-12 pl-4 pr-12 border-slate-200 focus:border-indigo-400 focus:ring-indigo-400/20 placeholder:text-slate-400 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield] ${
                         validationErrors.weight ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20' : ''
                       }`}
                       placeholder="70"
@@ -850,7 +985,7 @@ export default function VisitsIntakePage() {
                   </label>
                   <div className="relative">
                     <Input 
-                      className={`text-lg font-mono font-medium h-12 pl-4 pr-12 border-slate-200 focus:border-blue-400 focus:ring-blue-400/20 ${
+                      className={`text-lg font-mono font-medium h-12 pl-4 pr-12 border-slate-200 focus:border-blue-400 focus:ring-blue-400/20 placeholder:text-slate-400 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield] ${
                         validationErrors.height ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20' : ''
                       }`}
                       placeholder="170"
@@ -948,7 +1083,7 @@ export default function VisitsIntakePage() {
                  <ClipboardList className="h-10 w-10 text-slate-300" />
                </div>
                <h3 className="text-xl font-bold text-slate-700 mb-2">No Patient Selected</h3>
-               <p className="max-w-sm mx-auto">Select a patient from the waiting room list to start recording their vitals and intake information.</p>
+               <p className="max-w-sm mx-auto">Select a patient in a list to start recording their vitals and intake information.</p>
             </div>
           )}
         </div>

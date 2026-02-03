@@ -16,32 +16,174 @@ import { Separator } from '@/components/ui/separator';
 import { Gender, PatientStatus, type Patient, type CreatePatientInput, type UpdatePatientInput } from '@/types/patient.types';
 import { Loader2 } from 'lucide-react';
 
+// Phone number validation: Maximum 11 digits
+const phoneRegex = /^\d{1,11}$/;
+
+// Email validation: Standard email format
+const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+// Name validation: Letters, spaces, hyphens, apostrophes only (2-50 characters)
+const nameRegex = /^[a-zA-Z\s'-]{2,50}$/;
+
 const patientSchema = z.object({
-  firstName: z.string().min(2, 'First name must be at least 2 characters'),
-  middleName: z.string().optional(),
-  lastName: z.string().min(2, 'Last name must be at least 2 characters'),
-  dateOfBirth: z.string().min(1, 'Date of birth is required'),
-  gender: z.nativeEnum(Gender),
-  phone: z.string().regex(/^\+?[\d\s-]+$/, 'Invalid phone number format'),
-  email: z.string().email('Invalid email address').optional().or(z.literal('')),
-  address: z.string().optional(),
-  photoUrl: z.string().url('Invalid URL').optional().or(z.literal('')),
+  firstName: z
+    .string()
+    .min(2, 'First name must be at least 2 characters')
+    .max(50, 'First name must not exceed 50 characters')
+    .regex(nameRegex, 'First name can only contain letters, spaces, hyphens, and apostrophes'),
+  middleName: z
+    .string()
+    .max(50, 'Middle name must not exceed 50 characters')
+    .refine(
+      (name) => {
+        if (!name || name === '') return true; // Optional field
+        return nameRegex.test(name);
+      },
+      {
+        message: 'Middle name can only contain letters, spaces, hyphens, and apostrophes (min 2 characters if provided)',
+      }
+    )
+    .optional()
+    .or(z.literal('')),
+  lastName: z
+    .string()
+    .min(2, 'Last name must be at least 2 characters')
+    .max(50, 'Last name must not exceed 50 characters')
+    .regex(nameRegex, 'Last name can only contain letters, spaces, hyphens, and apostrophes'),
+  dateOfBirth: z
+    .string()
+    .min(1, 'Date of birth is required')
+    .refine(
+      (date) => {
+        const birthDate = new Date(date);
+        const today = new Date();
+        const age = today.getFullYear() - birthDate.getFullYear();
+        const monthDiff = today.getMonth() - birthDate.getMonth();
+        const actualAge = monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate()) 
+          ? age - 1 
+          : age;
+        return birthDate <= today && actualAge >= 0 && actualAge <= 150;
+      },
+      {
+        message: 'Date of birth must be a valid date in the past (age must be 0-150 years)',
+      }
+    ),
+  gender: z.nativeEnum(Gender, {
+    errorMap: () => ({ message: 'Please select a gender' }),
+  }),
+  phone: z
+    .string()
+    .min(1, 'Phone number is required')
+    .regex(phoneRegex, 'Phone number must be numeric and maximum 11 digits')
+    .refine(
+      (phone) => {
+        const digits = phone.replace(/\D/g, '');
+        return digits.length <= 11;
+      },
+      {
+        message: 'Phone number must be maximum 11 digits',
+      }
+    ),
+  email: z
+    .string()
+    .optional()
+    .refine(
+      (email) => {
+        if (!email || email === '') return true; // Optional field
+        return emailRegex.test(email) && email.length <= 255;
+      },
+      {
+        message: 'Please enter a valid email address (max 255 characters)',
+      }
+    )
+    .or(z.literal('')),
+  address: z
+    .string()
+    .max(500, 'Address must not exceed 500 characters')
+    .optional()
+    .or(z.literal('')),
   // Emergency Contact
-  emergencyContactName: z.string().optional(),
-  emergencyContactPhone: z.string().regex(/^\+?[\d\s-]+$/, 'Invalid phone number format').optional().or(z.literal('')),
-  emergencyContactRelation: z.string().optional(),
+  emergencyContactName: z
+    .string()
+    .max(100, 'Emergency contact name must not exceed 100 characters')
+    .regex(nameRegex, 'Name can only contain letters, spaces, hyphens, and apostrophes')
+    .optional()
+    .or(z.literal('')),
+  emergencyContactPhone: z
+    .string()
+    .optional()
+    .refine(
+      (phone) => {
+        if (!phone || phone === '') return true; // Optional field
+        const digits = phone.replace(/\D/g, '');
+        return digits.length <= 11;
+      },
+      {
+        message: 'Emergency contact phone must be maximum 11 digits',
+      }
+    )
+    .or(z.literal('')),
+  emergencyContactRelation: z
+    .string()
+    .max(50, 'Relationship must not exceed 50 characters')
+    .optional()
+    .or(z.literal('')),
   // Medical Information
-  bloodType: z.string().optional(),
-  allergies: z.string().optional(),
-  chronicConditions: z.string().optional(),
-  currentMedications: z.string().optional(),
-  familyHistory: z.string().optional(),
+  bloodType: z
+    .string()
+    .optional()
+    .or(z.literal('')),
+  allergies: z
+    .string()
+    .max(1000, 'Allergies must not exceed 1000 characters')
+    .optional()
+    .or(z.literal('')),
+  chronicConditions: z
+    .string()
+    .max(1000, 'Chronic conditions must not exceed 1000 characters')
+    .optional()
+    .or(z.literal('')),
+  currentMedications: z
+    .string()
+    .max(1000, 'Current medications must not exceed 1000 characters')
+    .optional()
+    .or(z.literal('')),
+  familyHistory: z
+    .string()
+    .max(2000, 'Family history must not exceed 2000 characters')
+    .optional()
+    .or(z.literal('')),
   // Insurance
-  insuranceProvider: z.string().optional(),
-  insuranceNumber: z.string().optional(),
-  insurancePolicyExpiry: z.string().optional(),
+  insuranceProvider: z
+    .string()
+    .max(200, 'Insurance provider must not exceed 200 characters')
+    .optional()
+    .or(z.literal('')),
+  insuranceNumber: z
+    .string()
+    .max(100, 'Insurance number must not exceed 100 characters')
+    .optional()
+    .or(z.literal('')),
+  insurancePolicyExpiry: z
+    .string()
+    .optional()
+    .refine(
+      (date) => {
+        if (!date || date === '') return true; // Optional field
+        const expiryDate = new Date(date);
+        return !isNaN(expiryDate.getTime());
+      },
+      {
+        message: 'Please enter a valid expiry date',
+      }
+    )
+    .or(z.literal('')),
   // Additional
-  notes: z.string().optional(),
+  notes: z
+    .string()
+    .max(5000, 'Notes must not exceed 5000 characters')
+    .optional()
+    .or(z.literal('')),
   status: z.nativeEnum(PatientStatus).optional(),
 });
 
@@ -71,7 +213,6 @@ export function PatientForm({ patient, onSubmit, onCancel, isLoading = false }: 
           phone: patient.phone,
           email: patient.email || '',
           address: patient.address || '',
-          photoUrl: patient.photoUrl || '',
           emergencyContactName: patient.emergencyContactName || '',
           emergencyContactPhone: patient.emergencyContactPhone || '',
           emergencyContactRelation: patient.emergencyContactRelation || '',
@@ -117,7 +258,6 @@ export function PatientForm({ patient, onSubmit, onCancel, isLoading = false }: 
         phone: data.phone,
         email: data.email || undefined,
         address: data.address || undefined,
-        photoUrl: data.photoUrl || undefined,
         emergencyContactName: data.emergencyContactName || undefined,
         emergencyContactPhone: data.emergencyContactPhone || undefined,
         emergencyContactRelation: data.emergencyContactRelation || undefined,
@@ -163,10 +303,11 @@ export function PatientForm({ patient, onSubmit, onCancel, isLoading = false }: 
               </FormField>
 
               <FormField name="middleName">
-                <FormLabel>Middle Name</FormLabel>
+                <FormLabel>Middle Name (Optional)</FormLabel>
                 <Input
                   {...form.register('middleName')}
-                  placeholder="Michael (optional)"
+                  placeholder="Michael"
+                  maxLength={50}
                 />
                 <FormMessage>{form.formState.errors.middleName?.message}</FormMessage>
               </FormField>
@@ -221,7 +362,9 @@ export function PatientForm({ patient, onSubmit, onCancel, isLoading = false }: 
                 <FormLabel required>Phone Number</FormLabel>
                 <Input
                   {...form.register('phone')}
-                  placeholder="+1234567890"
+                  placeholder="12345678901"
+                  type="tel"
+                  maxLength={11}
                 />
                 <FormMessage>{form.formState.errors.phone?.message}</FormMessage>
               </FormField>
@@ -238,27 +381,18 @@ export function PatientForm({ patient, onSubmit, onCancel, isLoading = false }: 
             </div>
 
             <FormField name="address">
-              <FormLabel>Address</FormLabel>
+              <FormLabel>Address (Optional)</FormLabel>
               <Textarea
                 {...form.register('address')}
                 placeholder="Street address, City, State, ZIP"
                 rows={2}
+                maxLength={500}
               />
               <FormMessage>{form.formState.errors.address?.message}</FormMessage>
             </FormField>
 
+            {patient && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField name="photoUrl">
-                <FormLabel>Photo URL (optional)</FormLabel>
-                <Input
-                  type="url"
-                  {...form.register('photoUrl')}
-                  placeholder="https://example.com/photo.jpg"
-                />
-                <FormMessage>{form.formState.errors.photoUrl?.message}</FormMessage>
-              </FormField>
-
-              {patient && (
                 <FormField name="status">
                   <FormLabel className="text-sm md:text-base">Status</FormLabel>
                   <Select
@@ -275,8 +409,8 @@ export function PatientForm({ patient, onSubmit, onCancel, isLoading = false }: 
                   </Select>
                   <FormMessage className="text-xs md:text-sm">{form.formState.errors.status?.message}</FormMessage>
                 </FormField>
+              </div>
               )}
-            </div>
           </CardContent>
         </Card>
 
@@ -297,10 +431,12 @@ export function PatientForm({ patient, onSubmit, onCancel, isLoading = false }: 
               </FormField>
 
               <FormField name="emergencyContactPhone">
-                <FormLabel>Contact Phone</FormLabel>
+                <FormLabel>Contact Phone (Optional)</FormLabel>
                 <Input
                   {...form.register('emergencyContactPhone')}
-                  placeholder="+1234567890"
+                  placeholder="12345678901"
+                  type="tel"
+                  maxLength={11}
                 />
                 <FormMessage>{form.formState.errors.emergencyContactPhone?.message}</FormMessage>
               </FormField>

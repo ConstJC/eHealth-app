@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { usePatient } from '@/hooks/use-patient';
 import { useUpdatePatient } from '@/hooks/queries/use-patients';
+import { useVisits, useVisit } from '@/hooks/queries/use-visits';
 import { Breadcrumbs } from '@/components/common/breadcrumbs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -18,6 +19,14 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Separator } from '@/components/ui/separator';
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetBody,
+  SheetFooter,
+} from '@/components/ui/sheet';
 import { LoadingSpinner } from '@/components/common/loading-spinner';
 import { ErrorMessage } from '@/components/common/error-message';
 import { EmptyState } from '@/components/common/empty-state';
@@ -50,8 +59,17 @@ export default function PatientDetailPage() {
   const [patient, setPatient] = useState<Patient | null>(null);
   const [activeTab, setActiveTab] = useState('overview');
   const [isEditDrawerOpen, setIsEditDrawerOpen] = useState(false);
-  
+  const [selectedVisitId, setSelectedVisitId] = useState<string | null>(null);
+
   const updatePatient = useUpdatePatient();
+  const { data: visitsRaw } = useVisits(
+    { patientId: patient?.id },
+    { enabled: !!patient?.id, refetchInterval: 60000 }
+  );
+  const visits = (visitsRaw || [])
+    .sort((a: any, b: any) => new Date(b.visitDate).getTime() - new Date(a.visitDate).getTime());
+
+  const { data: selectedVisitDetail } = useVisit(selectedVisitId ?? undefined);
 
   useEffect(() => {
     const loadPatient = async () => {
@@ -114,14 +132,14 @@ export default function PatientDetailPage() {
           <div className="flex items-center gap-4 mt-2">
             <Avatar className="h-16 w-16">
               <AvatarImage src={patient.photoUrl} alt={`${patient.firstName} ${patient.lastName}`} />
-              <AvatarFallback className="text-lg">{initials}</AvatarFallback>
+              <AvatarFallback className="text-lg bg-white border-2 border-blue-500 text-blue-600">{initials}</AvatarFallback>
             </Avatar>
             <div>
               <div className="flex items-center gap-3">
                 <h1 className="text-3xl font-bold text-gray-900">
                   {patient.firstName} {patient.middleName ? `${patient.middleName} ` : ''}{patient.lastName}
                 </h1>
-                <Badge variant={patient.status === PatientStatus.ACTIVE ? 'default' : 'secondary'} className="text-xs">
+                <Badge variant={patient.status === PatientStatus.ACTIVE ? 'default' : 'secondary'} className={`text-xs ${patient.status === PatientStatus.ACTIVE ? 'bg-emerald-100 text-emerald-700 border-emerald-200 hover:bg-emerald-200' : ''}`}>
                   {patient.status}
                 </Badge>
               </div>
@@ -377,23 +395,75 @@ export default function PatientDetailPage() {
             <CardContent className="space-y-2 text-sm">
               <div className="flex justify-between">
                 <span className="text-gray-600">Created:</span>
-                <span>{format(new Date(patient.createdAt), 'MMM dd, yyyy HH:mm')}</span>
+                <span>{format(new Date(patient.createdAt), 'MMM dd, yyyy h:mm a')}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600">Last Updated:</span>
-                <span>{format(new Date(patient.updatedAt), 'MMM dd, yyyy HH:mm')}</span>
+                <span>{format(new Date(patient.updatedAt), 'MMM dd, yyyy h:mm a')}</span>
               </div>
             </CardContent>
           </Card>
         </TabsContent>
 
         <TabsContent value="visits" className="mt-6">
-          <EmptyState
-            title="No visits yet"
-            description="Visit history will appear here once visits are created for this patient."
-            actionLabel="Create Visit"
-            onAction={() => router.push(`/patients/${patient.id}/visits/new`)}
-          />
+          {visits.length === 0 ? (
+            <EmptyState
+              title="No visits yet"
+              description="Visit history will appear here once visits are created for this patient."
+              actionLabel="Create Visit"
+              onAction={() => router.push('/visits')}
+            />
+          ) : (
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle>Visit History</CardTitle>
+                <Button size="sm" variant="outline" onClick={() => router.push('/visits')}>
+                  <Stethoscope className="h-4 w-4 mr-1.5" />
+                  Create Visit
+                </Button>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {visits.map((visit: any) => (
+                    <div
+                      key={visit.id}
+                      className="flex items-center justify-between rounded-lg border border-gray-200 bg-gray-50/50 p-4 hover:bg-gray-50 transition-colors cursor-pointer"
+                      onClick={() => setSelectedVisitId(visit.id)}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 rounded-lg bg-white border border-gray-200">
+                          <Calendar className="h-5 w-5 text-gray-600" />
+                        </div>
+                        <div>
+                          <p className="font-medium text-gray-900">
+                            {format(new Date(visit.visitDate), 'MMM dd, yyyy')} at {format(new Date(visit.visitDate), 'h:mm a')}
+                          </p>
+                          <p className="text-sm text-gray-600">
+                            {visit.visitType}
+                            {visit.chiefComplaint && ` · ${visit.chiefComplaint}`}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Badge
+                          variant={
+                            visit.status === 'COMPLETED'
+                              ? 'default'
+                              : visit.status === 'CANCELLED'
+                                ? 'secondary'
+                                : 'outline'
+                          }
+                        >
+                          {visit.status.replace('_', ' ')}
+                        </Badge>
+                        <ChevronDown className="h-4 w-4 -rotate-90 text-gray-400" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
 
         <TabsContent value="prescriptions" className="mt-6">
@@ -410,6 +480,147 @@ export default function PatientDetailPage() {
           />
         </TabsContent>
       </Tabs>
+
+      {/* Visit Details Sheet */}
+      <Sheet open={!!selectedVisitId} onOpenChange={(open) => !open && setSelectedVisitId(null)}>
+        <SheetContent side="right">
+          <SheetHeader>
+            <SheetTitle>Visit Details</SheetTitle>
+          </SheetHeader>
+          <SheetBody>
+            {selectedVisitDetail ? (
+              <div className="space-y-6">
+                {/* Date, Type, Status */}
+                <div className="rounded-lg border border-gray-200 bg-gray-50/50 p-4 space-y-2">
+                  <div className="flex items-center justify-between flex-wrap gap-2">
+                    <p className="font-medium text-gray-900">
+                      {format(new Date(selectedVisitDetail.visitDate), 'EEEE, MMM dd, yyyy')} at {format(new Date(selectedVisitDetail.visitDate), 'h:mm a')}
+                    </p>
+                    <Badge
+                      variant={
+                        selectedVisitDetail.status === 'COMPLETED'
+                          ? 'default'
+                          : selectedVisitDetail.status === 'CANCELLED'
+                            ? 'secondary'
+                            : 'outline'
+                      }
+                    >
+                      {selectedVisitDetail.status.replace('_', ' ')}
+                    </Badge>
+                  </div>
+                  <p className="text-sm text-gray-600">{selectedVisitDetail.visitType}</p>
+                  {selectedVisitDetail.doctor && (
+                    <p className="text-xs text-gray-500">
+                      Dr. {selectedVisitDetail.doctor.firstName} {selectedVisitDetail.doctor.lastName}
+                    </p>
+                  )}
+                </div>
+
+                {/* Chief Complaint */}
+                {selectedVisitDetail.chiefComplaint && (
+                  <div>
+                    <h4 className="text-sm font-semibold text-gray-700 mb-1">Chief Complaint</h4>
+                    <p className="text-sm text-gray-800">{selectedVisitDetail.chiefComplaint}</p>
+                  </div>
+                )}
+
+                {/* Vital Signs */}
+                {(selectedVisitDetail.bloodPressureSystolic != null || selectedVisitDetail.heartRate != null || selectedVisitDetail.temperature != null) && (
+                  <div>
+                    <h4 className="text-sm font-semibold text-gray-700 mb-2">Vital Signs</h4>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-sm">
+                      {(selectedVisitDetail.bloodPressureSystolic != null || selectedVisitDetail.bloodPressureDiastolic != null) && (
+                        <span className="text-gray-700">
+                          BP: {selectedVisitDetail.bloodPressureSystolic}/{selectedVisitDetail.bloodPressureDiastolic} mmHg
+                        </span>
+                      )}
+                      {selectedVisitDetail.heartRate != null && <span className="text-gray-700">HR: {selectedVisitDetail.heartRate} bpm</span>}
+                      {selectedVisitDetail.temperature != null && <span className="text-gray-700">Temp: {selectedVisitDetail.temperature} °C</span>}
+                      {selectedVisitDetail.weight != null && <span className="text-gray-700">Weight: {selectedVisitDetail.weight} kg</span>}
+                      {selectedVisitDetail.height != null && <span className="text-gray-700">Height: {selectedVisitDetail.height} cm</span>}
+                    </div>
+                  </div>
+                )}
+
+                {/* SOAP Notes */}
+                <div className="space-y-4">
+                  {selectedVisitDetail.subjective && (
+                    <div>
+                      <h4 className="text-sm font-semibold text-gray-700 mb-1">Subjective</h4>
+                      <p className="text-sm text-gray-800 whitespace-pre-wrap">{selectedVisitDetail.subjective}</p>
+                    </div>
+                  )}
+                  {selectedVisitDetail.objective && (
+                    <div>
+                      <h4 className="text-sm font-semibold text-gray-700 mb-1">Objective</h4>
+                      <p className="text-sm text-gray-800 whitespace-pre-wrap">{selectedVisitDetail.objective}</p>
+                    </div>
+                  )}
+                  {selectedVisitDetail.assessment && (
+                    <div>
+                      <h4 className="text-sm font-semibold text-gray-700 mb-1">Assessment</h4>
+                      <p className="text-sm text-gray-800 whitespace-pre-wrap">{selectedVisitDetail.assessment}</p>
+                    </div>
+                  )}
+                  {selectedVisitDetail.plan && (
+                    <div>
+                      <h4 className="text-sm font-semibold text-gray-700 mb-1">Plan</h4>
+                      <p className="text-sm text-gray-800 whitespace-pre-wrap">{selectedVisitDetail.plan}</p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Diagnosis */}
+                {(selectedVisitDetail.primaryDiagnosis || (selectedVisitDetail.secondaryDiagnoses?.length)) && (
+                  <div>
+                    <h4 className="text-sm font-semibold text-gray-700 mb-1">Diagnosis</h4>
+                    <ul className="text-sm text-gray-800 list-disc list-inside space-y-0.5">
+                      {selectedVisitDetail.primaryDiagnosis && <li>{selectedVisitDetail.primaryDiagnosis}</li>}
+                      {selectedVisitDetail.secondaryDiagnoses?.map((d: string, i: number) => (
+                        <li key={i}>{d}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {/* Follow-up */}
+                {(selectedVisitDetail.followUpDate || selectedVisitDetail.followUpReason) && (
+                  <div>
+                    <h4 className="text-sm font-semibold text-gray-700 mb-1">Follow-up</h4>
+                    <p className="text-sm text-gray-800">
+                      {selectedVisitDetail.followUpDate && format(new Date(selectedVisitDetail.followUpDate), 'MMM dd, yyyy')}
+                      {selectedVisitDetail.followUpReason && ` · ${selectedVisitDetail.followUpReason}`}
+                    </p>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="flex items-center justify-center py-12">
+                <LoadingSpinner />
+              </div>
+            )}
+          </SheetBody>
+          {selectedVisitDetail && (
+            <SheetFooter>
+              <Button
+                variant="outline"
+                onClick={() => setSelectedVisitId(null)}
+              >
+                Close
+              </Button>
+              <Button
+                onClick={() => {
+                  setSelectedVisitId(null);
+                  router.push(`/consultation?visitId=${selectedVisitDetail.id}`);
+                }}
+              >
+                <Stethoscope className="h-4 w-4 mr-2" />
+                Open in Consultation
+              </Button>
+            </SheetFooter>
+          )}
+        </SheetContent>
+      </Sheet>
 
       {/* Edit Patient Drawer */}
       <PatientFormDrawer

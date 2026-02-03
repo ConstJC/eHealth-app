@@ -11,8 +11,19 @@ import {
   Plus,
   Search,
   MoreVertical,
-  Activity
+  Activity,
+  Edit,
+  UserCog,
+  UserCheck,
+  UserX,
 } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 type SettingsSection = 'users' | 'roles' | 'menus';
 
@@ -101,10 +112,25 @@ function SettingsLink({ icon: Icon, label, active, onClick }: { icon: any, label
 
 function UsersTable() {
   const users = [
-    { name: 'Dr. John Smith', email: 'dr.smith@example.com', role: 'DOCTOR', status: 'Active' },
-    { name: 'Admin User', email: 'admin@example.com', role: 'ADMIN', status: 'Active' },
-    { name: 'Nurse Williams', email: 'nurse.williams@example.com', role: 'NURSE', status: 'Active' },
+    { id: '1', name: 'Dr. John Smith', email: 'dr.smith@example.com', role: 'DOCTOR', status: 'Active' },
+    { id: '2', name: 'Admin User', email: 'admin@example.com', role: 'ADMIN', status: 'Active' },
+    { id: '3', name: 'Nurse Williams', email: 'nurse.williams@example.com', role: 'NURSE', status: 'Active' },
   ];
+
+  const handleEditUser = (e: React.MouseEvent, user: (typeof users)[0]) => {
+    e.stopPropagation();
+    // TODO: Open edit user drawer/modal
+  };
+
+  const handleChangeRole = (e: React.MouseEvent, user: (typeof users)[0]) => {
+    e.stopPropagation();
+    // TODO: Open change role modal
+  };
+
+  const handleToggleStatus = (e: React.MouseEvent, user: (typeof users)[0]) => {
+    e.stopPropagation();
+    // TODO: Call activate/deactivate API
+  };
 
   return (
     <table className="w-full text-sm">
@@ -117,8 +143,8 @@ function UsersTable() {
         </tr>
       </thead>
       <tbody className="divide-y divide-slate-100">
-        {users.map((u, i) => (
-          <tr key={i} className="hover:bg-slate-50 transition-colors group cursor-pointer">
+        {users.map((u) => (
+          <tr key={u.id} className="hover:bg-slate-50 transition-colors group cursor-pointer">
             <td className="px-6 py-4">
               <div className="font-bold text-slate-900">{u.name}</div>
               <div className="text-xs text-slate-500">{u.email}</div>
@@ -132,10 +158,38 @@ function UsersTable() {
                 {u.status}
               </span>
             </td>
-            <td className="px-6 py-4 text-right">
-              <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 cursor-pointer">
-                <MoreVertical className="h-4 w-4" />
-              </Button>
+            <td className="px-6 py-4 text-right" onClick={(e) => e.stopPropagation()}>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-slate-600 hover:bg-slate-100 cursor-pointer">
+                    <MoreVertical className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuItem onClick={(e) => handleEditUser(e, u)}>
+                    <Edit className="mr-2 h-4 w-4" />
+                    Edit User
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={(e) => handleChangeRole(e, u)}>
+                    <UserCog className="mr-2 h-4 w-4" />
+                    Change Role
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={(e) => handleToggleStatus(e, u)}>
+                    {u.status === 'Active' ? (
+                      <>
+                        <UserX className="mr-2 h-4 w-4" />
+                        Deactivate
+                      </>
+                    ) : (
+                      <>
+                        <UserCheck className="mr-2 h-4 w-4" />
+                        Activate
+                      </>
+                    )}
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </td>
           </tr>
         ))}

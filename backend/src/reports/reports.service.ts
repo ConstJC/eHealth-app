@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { ReportQueryDto } from './dto';
+import { nowUTC, createUTCDateRangeInclusive, toUTCDateOnly, toUTCEndOfDay } from '../common/utils/date.utils';
 
 @Injectable()
 export class ReportsService {
@@ -184,7 +185,7 @@ export class ReportsService {
         visitDate: visit.visitDate,
         diagnosis: visit.primaryDiagnosis,
         reason,
-        issuedDate: new Date(),
+        issuedDate: nowUTC(),
       },
     };
   }
@@ -196,10 +197,7 @@ export class ReportsService {
     const where: any = { deletedAt: null };
 
     if (query.startDate && query.endDate) {
-      where.createdAt = {
-        gte: new Date(query.startDate),
-        lte: new Date(query.endDate),
-      };
+      where.createdAt = createUTCDateRangeInclusive(query.startDate, query.endDate);
     }
 
     const [total, active, inactive, byGender, byAgeGroup] = await Promise.all([
@@ -299,10 +297,7 @@ export class ReportsService {
     const where: any = {};
 
     if (query.startDate && query.endDate) {
-      where.visitDate = {
-        gte: new Date(query.startDate),
-        lte: new Date(query.endDate),
-      };
+      where.visitDate = createUTCDateRangeInclusive(query.startDate, query.endDate);
     }
 
     const visits = await this.prisma.visit.findMany({
@@ -340,10 +335,7 @@ export class ReportsService {
     const where: any = {};
 
     if (query.startDate && query.endDate) {
-      where.createdAt = {
-        gte: new Date(query.startDate),
-        lte: new Date(query.endDate),
-      };
+      where.createdAt = createUTCDateRangeInclusive(query.startDate, query.endDate);
     }
 
     const prescriptions = await this.prisma.prescription.findMany({
@@ -375,10 +367,7 @@ export class ReportsService {
     const where: any = {};
 
     if (query.startDate && query.endDate) {
-      where.visitDate = {
-        gte: new Date(query.startDate),
-        lte: new Date(query.endDate),
-      };
+      where.visitDate = createUTCDateRangeInclusive(query.startDate, query.endDate);
     }
 
     const productivity = await this.prisma.visit.groupBy({
@@ -450,10 +439,8 @@ export class ReportsService {
    * Get daily revenue
    */
   async getDailyRevenue(date: string) {
-    const startOfDay = new Date(date);
-    startOfDay.setHours(0, 0, 0, 0);
-    const endOfDay = new Date(date);
-    endOfDay.setHours(23, 59, 59, 999);
+    const startOfDay = toUTCDateOnly(date);
+    const endOfDay = toUTCEndOfDay(date);
 
     return this.getRevenueReport({
       startDate: startOfDay.toISOString(),
@@ -508,10 +495,7 @@ export class ReportsService {
     const where: any = {};
 
     if (query.startDate && query.endDate) {
-      where.billedAt = {
-        gte: new Date(query.startDate),
-        lte: new Date(query.endDate),
-      };
+      where.billedAt = createUTCDateRangeInclusive(query.startDate, query.endDate);
     }
 
     const invoices = await this.prisma.invoice.findMany({

@@ -1,5 +1,6 @@
 'use client';
 
+import { useRouter } from "next/navigation";
 import { Card } from "@/components/ui/card";
 import { 
   Users, 
@@ -15,13 +16,15 @@ import {
   Pill,
   Receipt,
   ChevronRight,
-  History as HistoryIcon
+  History as HistoryIcon,
+  LucideIcon
 } from "lucide-react";
 import { useDashboard } from "@/hooks/queries/use-dashboard";
 import { LoadingSpinner } from "@/components/common/loading-spinner";
-import { formatDistanceToNow } from "date-fns";
+import { formatDistanceToNow, format } from "date-fns";
 
 export default function DashboardPage() {
+  const router = useRouter();
   const currentDate = new Date().toLocaleDateString('en-US', { 
     weekday: 'long', 
     year: 'numeric', 
@@ -42,6 +45,57 @@ export default function DashboardPage() {
       return formatDistanceToNow(new Date(date), { addSuffix: true });
     } catch {
       return 'Recently';
+    }
+  };
+
+  // Helper to format appointment time
+  const formatAppointmentTime = (timeString: string) => {
+    if (!timeString) return 'Time TBD';
+    try {
+      const date = new Date(timeString);
+      return format(date, 'h:mm a');
+    } catch {
+      return timeString;
+    }
+  };
+
+  // Helper to format status text
+  const formatStatus = (status: string) => {
+    return status
+      .split('_')
+      .map(word => word.charAt(0) + word.slice(1).toLowerCase())
+      .join(' ');
+  };
+
+  // Navigation handlers
+  const handleViewAllAppointments = () => {
+    router.push('/visits');
+  };
+
+  const handlePatientClick = (patientId: string, visitId?: string) => {
+    if (visitId) {
+      router.push(`/consultation?visitId=${visitId}`);
+    } else {
+      router.push(`/patients/${patientId}`);
+    }
+  };
+
+  const handleActivityClick = (item: any) => {
+    if (item.entityId && item.entityType) {
+      switch (item.entityType.toLowerCase()) {
+        case 'patient':
+          router.push(`/patients/${item.entityId}`);
+          break;
+        case 'visit':
+          router.push(`/visits`);
+          break;
+        case 'appointment':
+          router.push(`/visits`);
+          break;
+        default:
+          // No navigation for other types
+          break;
+      }
     }
   };
 
@@ -95,9 +149,9 @@ export default function DashboardPage() {
           gradient="from-blue-500 to-blue-600"
         />
         <StatsCard 
-          title="Today's Appointments" 
-          value={stats?.todayAppointments?.toString() || '0'} 
-          change={stats?.remainingAppointments?.toString() || '0'} 
+          title="Today's Visits" 
+          value={stats?.todayVisits?.toString() || '0'} 
+          change={stats?.remainingVisits?.toString() || '0'} 
           changeLabel="remaining"
           icon={CalendarCheck}
           trend="neutral"
@@ -138,7 +192,10 @@ export default function DashboardPage() {
                 {queue.length}
               </span>
             </div>
-            <button className="text-xs md:text-sm font-semibold text-blue-600 hover:text-blue-700 flex items-center gap-1 hover:gap-2 transition-all">
+            <button 
+              onClick={handleViewAllAppointments}
+              className="text-xs md:text-sm font-semibold text-blue-600 hover:text-blue-700 flex items-center gap-1 hover:gap-2 transition-all"
+            >
               View All
               <ChevronRight className="h-3.5 w-3.5 md:h-4 md:w-4" />
             </button>
@@ -154,6 +211,7 @@ export default function DashboardPage() {
               queue.map((patient) => (
                 <div 
                   key={patient.id}
+                  onClick={() => handlePatientClick(patient.patientId, patient.id)}
                   className="group flex items-center justify-between p-3 md:p-4 lg:p-5 rounded-2xl bg-white border border-slate-200 shadow-sm hover:shadow-md hover:border-blue-200 transition-all duration-200 cursor-pointer"
                 >
                   <div className="flex items-center gap-2 md:gap-3 lg:gap-4">
@@ -165,7 +223,7 @@ export default function DashboardPage() {
                       <div className="flex items-center gap-1.5 md:gap-2 text-xs md:text-sm text-slate-600">
                         <span>{patient.reason}</span>
                         <span className="h-1 w-1 rounded-full bg-slate-400" />
-                        <span className="font-medium">{patient.appointmentTime}</span>
+                        <span className="font-medium">{formatAppointmentTime(patient.appointmentTime)}</span>
                       </div>
                     </div>
                   </div>
@@ -194,10 +252,30 @@ export default function DashboardPage() {
               <h2 className="text-base md:text-lg lg:text-xl font-bold text-slate-900">Quick Actions</h2>
             </div>
             <div className="grid grid-cols-2 gap-2 md:gap-3">
-              <QuickAction label="New Patient" icon={UserPlus} color="blue" />
-              <QuickAction label="New Visit" icon={Stethoscope} color="purple" />
-              <QuickAction label="Prescription" icon={Pill} color="emerald" />
-              <QuickAction label="Billing" icon={Receipt} color="amber" />
+              <QuickAction 
+                label="New Patient" 
+                icon={UserPlus} 
+                color="blue"
+                onClick={() => router.push('/patients/new')}
+              />
+              <QuickAction 
+                label="New Visit" 
+                icon={Stethoscope} 
+                color="purple"
+                onClick={() => router.push('/visits/new')}
+              />
+              <QuickAction 
+                label="Prescription" 
+                icon={Pill} 
+                color="emerald"
+                onClick={() => router.push('/prescriptions/new')}
+              />
+              <QuickAction 
+                label="Billing" 
+                icon={Receipt} 
+                color="amber"
+                onClick={() => router.push('/billing')}
+              />
             </div>
           </div>
 
@@ -217,7 +295,11 @@ export default function DashboardPage() {
                 </div>
               ) : (
                 activity.map((item) => (
-                  <div key={item.id} className="flex items-center gap-2 md:gap-3 pb-2 md:pb-3 border-b border-slate-100 last:border-0 last:pb-0 hover:bg-slate-50 -mx-2 px-2 py-2 rounded-lg transition-colors cursor-pointer">
+                  <div 
+                    key={item.id} 
+                    onClick={() => handleActivityClick(item)}
+                    className="flex items-center gap-2 md:gap-3 pb-2 md:pb-3 border-b border-slate-100 last:border-0 last:pb-0 hover:bg-slate-50 -mx-2 px-2 py-2 rounded-lg transition-colors cursor-pointer"
+                  >
                     <div className="h-9 w-9 md:h-10 md:w-10 lg:h-11 lg:w-11 rounded-xl bg-white border-2 border-orange-500 text-orange-600 flex items-center justify-center shadow-sm">
                       <HistoryIcon className="h-4 w-4 md:h-5 md:w-5" />
                     </div>
@@ -241,18 +323,37 @@ export default function DashboardPage() {
 
 // -- Components --
 
-function StatsCard({ title, value, change, changeLabel, icon: Icon, trend, gradient }: any) {
+interface StatsCardProps {
+  title: string;
+  value: string;
+  change: string;
+  changeLabel: string;
+  icon: LucideIcon;
+  trend: 'up' | 'down' | 'neutral';
+  gradient: string;
+}
+
+function StatsCard({ title, value, change, changeLabel, icon: Icon, trend, gradient }: StatsCardProps) {
   const isPositive = trend === 'up';
   const isNegative = trend === 'down';
   
+  // Get shadow color based on gradient
+  const getShadowColor = () => {
+    if (gradient.includes('blue')) return 'shadow-blue-500/20';
+    if (gradient.includes('purple')) return 'shadow-purple-500/20';
+    if (gradient.includes('emerald')) return 'shadow-emerald-500/20';
+    if (gradient.includes('amber')) return 'shadow-amber-500/20';
+    return 'shadow-slate-500/20';
+  };
+  
   return (
-    <Card className="relative p-4 md:p-5 lg:p-6 border-none shadow-sm bg-white hover:shadow-md transition-all duration-300 overflow-hidden group cursor-pointer">
+    <Card className="relative p-4 md:p-5 lg:p-6 border-none shadow-sm bg-white hover:shadow-md transition-all duration-300 overflow-hidden group">
       {/* Background Gradient Accent */}
       <div className={`absolute top-0 right-0 w-24 h-24 md:w-32 md:h-32 bg-gradient-to-br ${gradient} opacity-5 rounded-full -mr-12 -mt-12 md:-mr-16 md:-mt-16 group-hover:opacity-10 transition-opacity`} />
       
       <div className="relative z-10">
         <div className="flex items-center justify-between mb-3 md:mb-4">
-          <div className={`p-2 md:p-2.5 lg:p-3 rounded-xl bg-gradient-to-br ${gradient} shadow-lg shadow-${gradient.split('-')[1]}-500/20`}>
+          <div className={`p-2 md:p-2.5 lg:p-3 rounded-xl bg-gradient-to-br ${gradient} shadow-lg ${getShadowColor()}`}>
             <Icon className="h-4 w-4 md:h-5 md:w-5 text-white" />
           </div>
           {isPositive && (
@@ -262,7 +363,7 @@ function StatsCard({ title, value, change, changeLabel, icon: Icon, trend, gradi
             </div>
           )}
           {isNegative && (
-            <div className="flex items-center gap-0.5 md:gap-1 text-emerald-600 text-xs md:text-sm font-semibold">
+            <div className="flex items-center gap-0.5 md:gap-1 text-red-600 text-xs md:text-sm font-semibold">
               <TrendingUp className="h-3 w-3 md:h-4 md:w-4 rotate-180" />
               {change}
             </div>
@@ -279,8 +380,15 @@ function StatsCard({ title, value, change, changeLabel, icon: Icon, trend, gradi
   );
 }
 
-function QuickAction({ label, icon: Icon, color }: { label: string; icon: any; color: string }) {
-  const colorMap: any = {
+interface QuickActionProps {
+  label: string;
+  icon: LucideIcon;
+  color: 'blue' | 'purple' | 'emerald' | 'amber';
+  onClick: () => void;
+}
+
+function QuickAction({ label, icon: Icon, color, onClick }: QuickActionProps) {
+  const colorMap: Record<QuickActionProps['color'], string> = {
     blue: 'from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700',
     purple: 'from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700',
     emerald: 'from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700',
@@ -288,7 +396,10 @@ function QuickAction({ label, icon: Icon, color }: { label: string; icon: any; c
   };
 
   return (
-    <button className={`flex flex-col items-center justify-center p-3 md:p-4 lg:p-5 rounded-xl bg-gradient-to-br ${colorMap[color]} text-white shadow-md hover:shadow-lg transition-all transform hover:scale-105 active:scale-95`}>
+    <button 
+      onClick={onClick}
+      className={`flex flex-col items-center justify-center p-3 md:p-4 lg:p-5 rounded-xl bg-gradient-to-br ${colorMap[color]} text-white shadow-md hover:shadow-lg transition-all transform hover:scale-105 active:scale-95`}
+    >
       <Icon className="h-5 w-5 md:h-6 md:w-6 mb-1.5 md:mb-2" />
       <span className="text-xs md:text-sm font-semibold">{label}</span>
     </button>

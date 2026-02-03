@@ -88,23 +88,23 @@ const SheetContent = React.forwardRef<HTMLDivElement, SheetContentProps>(
 
     return (
       <div 
-        className="fixed inset-0 z-[9999] flex items-stretch"
+        className="fixed inset-0 z-80 flex items-stretch"
       >
         {/* Backdrop - Covers entire viewport including sidebar. 
             Note: Click outside is disabled to prevent accidental form data loss.
             Dialog only closes via close button, cancel button, or successful save. */}
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity duration-300 z-[9999]" />
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity duration-300 z-80" />
 
         {/* Sheet Container with positioning */}
         <div 
           className={cn(
-            "fixed inset-y-0 flex z-[10000]",
+            "fixed inset-y-0 flex z-100 top-2",
             side === 'right' ? 'right-0' : 'left-0'
           )}
         >
           {/* Close button positioned outside the sheet on the left edge */}
           {showCloseButton && side === 'right' && (
-            <div className="relative flex items-start pt-6 z-[10001]">
+            <div className="relative flex items-start pt-6 z-101">
               <Button
                 variant="ghost"
                 size="icon"
@@ -121,7 +121,7 @@ const SheetContent = React.forwardRef<HTMLDivElement, SheetContentProps>(
           <div
             ref={contentRef}
             className={cn(
-              "relative z-[10001] flex flex-col bg-white shadow-2xl overflow-hidden",
+              "relative z-101 flex flex-col bg-white shadow-2xl overflow-hidden",
               // Increased widths optimized for tablets and laptops
               "w-[95vw] sm:w-[90vw] md:w-[75vw] md:max-w-[650px] lg:w-[65vw] lg:max-w-[750px] xl:w-[900px] 2xl:w-[1200px]",
               // Rounded corners with overflow hidden to prevent white background bleed
@@ -145,7 +145,7 @@ const SheetContent = React.forwardRef<HTMLDivElement, SheetContentProps>(
 
           {/* Close button for left side */}
           {showCloseButton && side === 'left' && (
-            <div className="relative flex items-start pt-6 z-[10001]">
+            <div className="relative flex items-start pt-6 z-101">
               <Button
                 variant="ghost"
                 size="icon"

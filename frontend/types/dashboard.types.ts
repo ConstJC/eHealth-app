@@ -3,8 +3,8 @@
 export interface DashboardStats {
   totalPatients: number;
   totalPatientsChange: string;
-  todayAppointments: number;
-  remainingAppointments: number;
+  todayVisits: number;
+  remainingVisits: number;
   revenueToday: number;
   revenueChange: string;
   avgWaitTime: number;

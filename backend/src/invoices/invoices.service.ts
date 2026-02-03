@@ -14,6 +14,7 @@ import {
   SearchInvoiceDto,
 } from './dto';
 import { Invoice, Prisma, InvoiceStatus } from '@prisma/client';
+import { createUTCDateRangeInclusive, nowUTC } from '../common/utils/date.utils';
 
 export interface PaymentRecord {
   date: string;
@@ -195,10 +196,7 @@ export class InvoicesService {
       ...(visitId && { visitId }),
       ...(startDate &&
         endDate && {
-          billedAt: {
-            gte: new Date(startDate),
-            lte: new Date(endDate),
-          },
+          billedAt: createUTCDateRangeInclusive(startDate, endDate),
         }),
       ...(search && {
         OR: [
@@ -442,7 +440,7 @@ export class InvoicesService {
 
     // Add new payment
     const newPayment: PaymentRecord = {
-      date: new Date().toISOString(),
+      date: nowUTC().toISOString(),
       amount: dto.amount,
       method: dto.method,
       receiptNo: dto.receiptNo,
@@ -594,7 +592,7 @@ export class InvoicesService {
 
     // Add refund as negative payment
     const refundPayment: PaymentRecord = {
-      date: new Date().toISOString(),
+      date: nowUTC().toISOString(),
       amount: -dto.amount, // Negative amount for refund
       method: 'REFUND',
       receiptNo: `REF-${Date.now()}`,
@@ -653,10 +651,7 @@ export class InvoicesService {
     const where: Prisma.InvoiceWhereInput = {};
 
     if (startDate && endDate) {
-      where.billedAt = {
-        gte: new Date(startDate),
-        lte: new Date(endDate),
-      };
+      where.billedAt = createUTCDateRangeInclusive(startDate, endDate);
     }
 
     const [

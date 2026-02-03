@@ -7,6 +7,7 @@ import {
 import { PrismaService } from '../prisma/prisma.service';
 import { CreatePatientDto, UpdatePatientDto, SearchPatientDto } from './dto';
 import { Patient, Prisma, PatientStatus } from '@prisma/client';
+import { toUTCDateOnly } from '../common/utils/date.utils';
 
 @Injectable()
 export class PatientsService {
@@ -41,9 +42,9 @@ export class PatientsService {
       data: {
         ...dto,
         patientId,
-        dateOfBirth: new Date(dto.dateOfBirth),
+        dateOfBirth: toUTCDateOnly(dto.dateOfBirth),
         insurancePolicyExpiry: dto.insurancePolicyExpiry
-          ? new Date(dto.insurancePolicyExpiry)
+          ? toUTCDateOnly(dto.insurancePolicyExpiry)
           : null,
         allergies: dto.allergies || [],
         chronicConditions: dto.chronicConditions || [],
@@ -226,9 +227,9 @@ export class PatientsService {
       where: { id },
       data: {
         ...dto,
-        dateOfBirth: dto.dateOfBirth ? new Date(dto.dateOfBirth) : undefined,
+        dateOfBirth: dto.dateOfBirth ? toUTCDateOnly(dto.dateOfBirth) : undefined,
         insurancePolicyExpiry: dto.insurancePolicyExpiry
-          ? new Date(dto.insurancePolicyExpiry)
+          ? toUTCDateOnly(dto.insurancePolicyExpiry)
           : undefined,
       },
     });

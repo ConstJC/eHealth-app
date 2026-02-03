@@ -116,7 +116,10 @@ export const visitKeys = {
 };
 
 // Get visits list with filters
-export function useVisits(filters?: { status?: string; date?: string; patientId?: string }) {
+export function useVisits(
+  filters?: { status?: string; date?: string; patientId?: string; startDate?: string; endDate?: string },
+  options?: { enabled?: boolean; refetchInterval?: number }
+) {
   return useQuery({
     queryKey: visitKeys.list(filters || {}),
     queryFn: async () => {
@@ -124,13 +127,16 @@ export function useVisits(filters?: { status?: string; date?: string; patientId?
       if (filters?.status) params.append('status', filters.status);
       if (filters?.date) params.append('date', filters.date);
       if (filters?.patientId) params.append('patientId', filters.patientId);
+      if (filters?.startDate) params.append('startDate', filters.startDate);
+      if (filters?.endDate) params.append('endDate', filters.endDate);
 
       const response = await apiClient.get<{ data: Visit[]; meta?: any }>(`/visits?${params.toString()}`);
       // Backend returns { data: [], meta: {} } structure
       return Array.isArray(response.data) ? response.data : response.data.data || [];
     },
-    staleTime: 30000, // 30 seconds
-    refetchInterval: 30000, // Refetch every 30 seconds for real-time updates
+    enabled: options?.enabled !== false,
+    staleTime: 15000, // 15 seconds
+    refetchInterval: options?.refetchInterval ?? 15000, // Refetch every 15 seconds so Active Consultations list updates in real time
   });
 }
 
@@ -175,16 +181,18 @@ export function useCreateVisit() {
       const response = await apiClient.post<Visit>('/visits', data);
       return response.data;
     },
-    onSuccess: (newVisit) => {
-      // Invalidate visits list
+    onSuccess: async (newVisit) => {
+      // Invalidate and refetch all visits lists so Active Consultations etc. update in real time
       queryClient.invalidateQueries({ queryKey: visitKeys.lists() });
-      
+      await queryClient.refetchQueries({ queryKey: visitKeys.lists() });
+
       // Add to cache
       queryClient.setQueryData(visitKeys.detail(newVisit.id), newVisit);
-      
-      // Invalidate triage queue
+
+      // Invalidate triage queue and dashboard Patient Queue
       queryClient.invalidateQueries({ queryKey: ['triage', 'queue'] });
-      
+      queryClient.invalidateQueries({ queryKey: ['dashboard', 'queue'] });
+
       toast.success('Visit created successfully! Patient sent to doctor.');
     },
     onError: (error: any) => {
@@ -283,6 +291,27 @@ export function useCompleteVisit() {
     },
     onError: (error: any) => {
       const message = error?.response?.data?.message || 'Failed to complete visit';
+      toast.error(message);
+    },
+  });
+}
+
+// Cancel visit
+export function useCancelVisit() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ id, reason }: { id: string; reason?: string }) => {
+      const response = await apiClient.patch<Visit>(`/visits/${id}/cancel`, { reason });
+      return response.data;
+    },
+    onSuccess: (cancelledVisit) => {
+      queryClient.setQueryData(visitKeys.detail(cancelledVisit.id), cancelledVisit);
+      queryClient.invalidateQueries({ queryKey: visitKeys.lists() });
+      toast.success('Visit cancelled successfully!');
+    },
+    onError: (error: any) => {
+      const message = error?.response?.data?.message || 'Failed to cancel visit';
       toast.error(message);
     },
   });

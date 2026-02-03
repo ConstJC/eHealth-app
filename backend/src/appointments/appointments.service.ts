@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { AppointmentStatus } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateAppointmentDto, UpdateAppointmentDto } from './dto/appointments.dto';
+import { toUTC, toUTCDateOnly, toUTCEndOfDay } from '../common/utils/date.utils';
 
 @Injectable()
 export class AppointmentsService {
@@ -11,8 +12,8 @@ export class AppointmentsService {
     return this.prisma.appointment.create({
       data: {
         ...dto,
-        startTime: new Date(dto.startTime),
-        endTime: new Date(dto.endTime),
+        startTime: toUTC(dto.startTime),
+        endTime: toUTC(dto.endTime),
       },
       include: {
         patient: true,
@@ -73,8 +74,8 @@ export class AppointmentsService {
       where: { id },
       data: {
         ...dto,
-        startTime: dto.startTime ? new Date(dto.startTime) : undefined,
-        endTime: dto.endTime ? new Date(dto.endTime) : undefined,
+        startTime: dto.startTime ? toUTC(dto.startTime) : undefined,
+        endTime: dto.endTime ? toUTC(dto.endTime) : undefined,
       }
     });
   }

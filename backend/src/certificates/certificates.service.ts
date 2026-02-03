@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateCertificateDto, UpdateCertificateDto } from './dto/certificates.dto';
+import { toUTCDateOnly } from '../common/utils/date.utils';
 
 @Injectable()
 export class CertificatesService {
@@ -14,9 +15,9 @@ export class CertificatesService {
         ...dto,
         doctorId,
         certificateNo,
-        startDate: dto.startDate ? new Date(dto.startDate) : null,
-        endDate: dto.endDate ? new Date(dto.endDate) : null,
-        returnDate: dto.returnDate ? new Date(dto.returnDate) : null,
+        startDate: dto.startDate ? toUTCDateOnly(dto.startDate) : null,
+        endDate: dto.endDate ? toUTCDateOnly(dto.endDate) : null,
+        returnDate: dto.returnDate ? toUTCDateOnly(dto.returnDate) : null,
       },
       include: {
         patient: true,
@@ -61,9 +62,9 @@ export class CertificatesService {
       where: { id },
       data: {
         ...dto,
-        startDate: dto.startDate ? new Date(dto.startDate) : undefined,
-        endDate: dto.endDate ? new Date(dto.endDate) : undefined,
-        returnDate: dto.returnDate ? new Date(dto.returnDate) : undefined,
+        startDate: dto.startDate ? toUTCDateOnly(dto.startDate) : undefined,
+        endDate: dto.endDate ? toUTCDateOnly(dto.endDate) : undefined,
+        returnDate: dto.returnDate ? toUTCDateOnly(dto.returnDate) : undefined,
       }
     });
   }

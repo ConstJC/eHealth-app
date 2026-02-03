@@ -1,4 +1,4 @@
-import { PrismaClient, Role, Gender, PatientStatus, VisitType, VisitStatus, PrescriptionStatus, InvoiceStatus } from '@prisma/client';
+import { PrismaClient, Role, Gender, PatientStatus, VisitStatus, PrescriptionStatus, InvoiceStatus } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 
 const prisma = new PrismaClient();
@@ -11,7 +11,7 @@ async function main() {
   // ============================================
 
   // Create admin user
-  const adminPassword = await bcrypt.hash('AdminPassword123!', 12);
+  const adminPassword = await bcrypt.hash('password', 12);
   const admin = await prisma.user.upsert({
     where: { email: 'admin@example.com' },
     update: {},
@@ -28,7 +28,7 @@ async function main() {
   console.log('✅ Admin user created:', { id: admin.id, email: admin.email });
 
   // Create doctor
-  const doctorPassword = await bcrypt.hash('DoctorPassword123!', 12);
+  const doctorPassword = await bcrypt.hash('password!', 12);
   const doctor = await prisma.user.upsert({
     where: { email: 'dr.smith@example.com' },
     update: {},
@@ -45,7 +45,7 @@ async function main() {
   console.log('✅ Doctor created:', { id: doctor.id, email: doctor.email });
 
   // Create another doctor
-  const doctor2Password = await bcrypt.hash('DoctorPassword123!', 12);
+  const doctor2Password = await bcrypt.hash('password!', 12);
   const doctor2 = await prisma.user.upsert({
     where: { email: 'dr.johnson@example.com' },
     update: {},
@@ -62,7 +62,7 @@ async function main() {
   console.log('✅ Doctor 2 created:', { id: doctor2.id, email: doctor2.email });
 
   // Create nurse
-  const nursePassword = await bcrypt.hash('NursePassword123!', 12);
+  const nursePassword = await bcrypt.hash('password!', 12);
   const nurse = await prisma.user.upsert({
     where: { email: 'nurse.williams@example.com' },
     update: {},
@@ -79,7 +79,7 @@ async function main() {
   console.log('✅ Nurse created:', { id: nurse.id, email: nurse.email });
 
   // Create receptionist
-  const receptionistPassword = await bcrypt.hash('ReceptionistPassword123!', 12);
+  const receptionistPassword = await bcrypt.hash('password!', 12);
   const receptionist = await prisma.user.upsert({
     where: { email: 'receptionist@example.com' },
     update: {},
@@ -412,283 +412,6 @@ async function main() {
   });
   console.log('✅ Patient 4 created:', { id: patient4.id, patientId: patient4.patientId });
 
-  // ============================================
-  // CREATE VISITS
-  // ============================================
-
-  // Visit 1 - Completed visit for Patient 1
-  const visit1 = await prisma.visit.create({
-    data: {
-      patientId: patient1.id,
-      doctorId: doctor.id,
-      visitDate: new Date('2024-01-15T10:00:00'),
-      visitType: VisitType.ROUTINE,
-      status: VisitStatus.COMPLETED,
-      bloodPressureSystolic: 140,
-      bloodPressureDiastolic: 90,
-      heartRate: 75,
-      respiratoryRate: 16,
-      temperature: 36.8,
-      oxygenSaturation: 98,
-      weight: 82.5,
-      height: 175,
-      bmi: 26.9,
-      painScale: 2,
-      vitalSignsRecordedBy: nurse.id,
-      vitalSignsRecordedAt: new Date('2024-01-15T09:45:00'),
-      chiefComplaint: 'Follow-up for hypertension',
-      subjective: 'Patient reports occasional headaches. Taking medications regularly. No chest pain or shortness of breath.',
-      objective: 'BP slightly elevated at 140/90. Heart sounds normal. Lungs clear bilaterally.',
-      assessment: 'Hypertension, not optimally controlled',
-      plan: 'Increase Lisinopril to 20mg daily. Follow-up in 4 weeks. Continue monitoring BP at home.',
-      primaryDiagnosis: 'Essential Hypertension',
-      secondaryDiagnoses: [],
-      isLocked: true,
-      lockedAt: new Date('2024-01-15T10:30:00'),
-      lockedBy: doctor.id,
-    },
-  });
-  console.log('✅ Visit 1 created:', { id: visit1.id });
-
-  // Visit 2 - In progress visit for Patient 2
-  const visit2 = await prisma.visit.create({
-    data: {
-      patientId: patient2.id,
-      doctorId: doctor.id,
-      visitDate: new Date(),
-      visitType: VisitType.ROUTINE,
-      status: VisitStatus.IN_PROGRESS,
-      bloodPressureSystolic: 118,
-      bloodPressureDiastolic: 76,
-      heartRate: 72,
-      respiratoryRate: 14,
-      temperature: 36.6,
-      oxygenSaturation: 99,
-      weight: 62.0,
-      height: 165,
-      bmi: 22.8,
-      painScale: 0,
-      vitalSignsRecordedBy: nurse.id,
-      vitalSignsRecordedAt: new Date(),
-      chiefComplaint: 'Annual checkup',
-      subjective: 'Patient feels well. No complaints. Maintaining healthy lifestyle.',
-    },
-  });
-  console.log('✅ Visit 2 created:', { id: visit2.id });
-
-  // Visit 3 - Completed visit for Patient 3
-  const visit3 = await prisma.visit.create({
-    data: {
-      patientId: patient3.id,
-      doctorId: doctor2.id,
-      visitDate: new Date('2024-01-20T14:00:00'),
-      visitType: VisitType.FOLLOWUP,
-      status: VisitStatus.COMPLETED,
-      bloodPressureSystolic: 135,
-      bloodPressureDiastolic: 85,
-      heartRate: 78,
-      respiratoryRate: 15,
-      temperature: 36.7,
-      oxygenSaturation: 97,
-      weight: 95.5,
-      height: 178,
-      bmi: 30.1,
-      painScale: 1,
-      vitalSignsRecordedBy: nurse.id,
-      vitalSignsRecordedAt: new Date('2024-01-20T13:45:00'),
-      chiefComplaint: 'Diabetes follow-up and medication review',
-      subjective: 'Patient reports good blood sugar control. Checking levels twice daily. No hypoglycemic episodes.',
-      objective: 'BP 135/85, slightly elevated. Weight stable. HbA1c results from last week show 7.2%.',
-      assessment: 'Type 2 Diabetes Mellitus - adequately controlled. Hypertension - stable.',
-      plan: 'Continue current medications. Encourage weight loss. Lab work in 3 months. Follow-up in 3 months.',
-      primaryDiagnosis: 'Type 2 Diabetes Mellitus',
-      secondaryDiagnoses: ['Essential Hypertension', 'Hyperlipidemia'],
-      followUpDate: new Date('2024-04-20'),
-      followUpReason: 'Diabetes management and lab review',
-      isLocked: true,
-      lockedAt: new Date('2024-01-20T14:45:00'),
-      lockedBy: doctor2.id,
-    },
-  });
-  console.log('✅ Visit 3 created:', { id: visit3.id });
-
-  // ============================================
-  // CREATE PRESCRIPTIONS
-  // ============================================
-
-  const prescription1 = await prisma.prescription.create({
-    data: {
-      patientId: patient1.id,
-      visitId: visit1.id,
-      doctorId: doctor.id,
-      medicationName: 'Lisinopril',
-      genericName: 'Lisinopril',
-      brandName: 'Prinivil',
-      dosage: '20mg',
-      frequency: 'Once daily',
-      route: 'Oral',
-      duration: '90 days',
-      quantity: '90 tablets',
-      refills: 3,
-      instructions: 'Take one tablet by mouth once daily in the morning',
-      status: PrescriptionStatus.ACTIVE,
-    },
-  });
-  console.log('✅ Prescription 1 created:', { id: prescription1.id });
-
-  const prescription2 = await prisma.prescription.create({
-    data: {
-      patientId: patient3.id,
-      visitId: visit3.id,
-      doctorId: doctor2.id,
-      medicationName: 'Metformin',
-      genericName: 'Metformin HCl',
-      brandName: 'Glucophage',
-      dosage: '500mg',
-      frequency: 'Twice daily',
-      route: 'Oral',
-      duration: '90 days',
-      quantity: '180 tablets',
-      refills: 3,
-      instructions: 'Take one tablet by mouth twice daily with meals',
-      status: PrescriptionStatus.ACTIVE,
-    },
-  });
-  console.log('✅ Prescription 2 created:', { id: prescription2.id });
-
-  const prescription3 = await prisma.prescription.create({
-    data: {
-      patientId: patient3.id,
-      visitId: visit3.id,
-      doctorId: doctor2.id,
-      medicationName: 'Atorvastatin',
-      genericName: 'Atorvastatin',
-      brandName: 'Lipitor',
-      dosage: '20mg',
-      frequency: 'Once daily',
-      route: 'Oral',
-      duration: '90 days',
-      quantity: '90 tablets',
-      refills: 3,
-      instructions: 'Take one tablet by mouth once daily at bedtime',
-      status: PrescriptionStatus.ACTIVE,
-    },
-  });
-  console.log('✅ Prescription 3 created:', { id: prescription3.id });
-
-  // ============================================
-  // CREATE INVOICES
-  // ============================================
-
-  const invoice1 = await prisma.invoice.upsert({
-    where: { invoiceNumber: `INV-${currentYear}-00001` },
-    update: {},
-    create: {
-      invoiceNumber: `INV-${currentYear}-00001`,
-      patientId: patient1.id,
-      visitId: visit1.id,
-      items: [
-        {
-          description: 'General Consultation',
-          quantity: 1,
-          unitPrice: 100.00,
-          total: 100.00,
-        },
-      ],
-      subtotal: 100.00,
-      discount: 0,
-      tax: 0,
-      total: 100.00,
-      amountPaid: 100.00,
-      balance: 0,
-      status: InvoiceStatus.PAID,
-      payments: [
-        {
-          date: new Date('2024-01-15T10:45:00').toISOString(),
-          amount: 100.00,
-          method: 'Credit Card',
-          receiptNo: 'REC-001',
-          recordedBy: receptionist.id,
-        },
-      ],
-      billedBy: receptionist.id,
-      billedAt: new Date('2024-01-15T10:35:00'),
-    },
-  });
-  console.log('✅ Invoice 1 created:', { id: invoice1.id, invoiceNumber: invoice1.invoiceNumber });
-
-  const invoice2 = await prisma.invoice.upsert({
-    where: { invoiceNumber: `INV-${currentYear}-00002` },
-    update: {},
-    create: {
-      invoiceNumber: `INV-${currentYear}-00002`,
-      patientId: patient3.id,
-      visitId: visit3.id,
-      items: [
-        {
-          description: 'Follow-up Consultation',
-          quantity: 1,
-          unitPrice: 80.00,
-          total: 80.00,
-        },
-        {
-          description: 'Medication Review',
-          quantity: 1,
-          unitPrice: 30.00,
-          total: 30.00,
-        },
-      ],
-      subtotal: 110.00,
-      discount: 10.00,
-      discountReason: 'Senior citizen discount',
-      tax: 0,
-      total: 100.00,
-      amountPaid: 50.00,
-      balance: 50.00,
-      status: InvoiceStatus.PARTIAL,
-      payments: [
-        {
-          date: new Date('2024-01-20T15:00:00').toISOString(),
-          amount: 50.00,
-          method: 'Cash',
-          receiptNo: 'REC-002',
-          recordedBy: receptionist.id,
-        },
-      ],
-      billedBy: receptionist.id,
-      billedAt: new Date('2024-01-20T14:50:00'),
-    },
-  });
-  console.log('✅ Invoice 2 created:', { id: invoice2.id, invoiceNumber: invoice2.invoiceNumber });
-
-  const invoice3 = await prisma.invoice.upsert({
-    where: { invoiceNumber: `INV-${currentYear}-00003` },
-    update: {},
-    create: {
-      invoiceNumber: `INV-${currentYear}-00003`,
-      patientId: patient2.id,
-      visitId: visit2.id,
-      items: [
-        {
-          description: 'Annual Physical Examination',
-          quantity: 1,
-          unitPrice: 150.00,
-          total: 150.00,
-        },
-      ],
-      subtotal: 150.00,
-      discount: 0,
-      tax: 0,
-      total: 150.00,
-      amountPaid: 0,
-      balance: 150.00,
-      status: InvoiceStatus.UNPAID,
-      payments: [],
-      billedBy: receptionist.id,
-      billedAt: new Date(),
-    },
-  });
-  console.log('✅ Invoice 3 created:', { id: invoice3.id, invoiceNumber: invoice3.invoiceNumber });
 
   console.log('\n🎉 Database seeding completed successfully!');
   console.log('\n📋 Test Accounts:');

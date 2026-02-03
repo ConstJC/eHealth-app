@@ -15,6 +15,12 @@ import { AppModule } from './app.module';
 import { AllExceptionsFilter } from './common/filters/http-exception.filter';
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
 
+// Set timezone to UTC for consistent date handling across all environments
+// This ensures all dates are stored and processed in UTC, preventing timezone-related issues
+if (!process.env.TZ) {
+  process.env.TZ = 'UTC';
+}
+
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const configService = app.get(ConfigService);

@@ -1,5 +1,6 @@
 /**
- * Date formatting utilities
+ * Date formatting utilities.
+ * See datetime-backend-frontend.md for backend/frontend date conventions (DateTime, date-only, time-only).
  */
 export const formatDate = (date: Date | string | null | undefined): string => {
   if (!date) return '—';
